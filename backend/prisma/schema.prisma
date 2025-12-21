@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -11,4 +5,191 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model a {
+  id_histetudiantaccepte    Int
+  id_histoffre              Int
+  historiqueetudiantaccepte historiqueetudiantaccepte @relation(fields: [id_histetudiantaccepte], references: [id_histetudiantaccepte], onDelete: NoAction, onUpdate: NoAction)
+  historiqueoffre           historiqueoffre           @relation(fields: [id_histoffre], references: [id_histoffre], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_histetudiantaccepte, id_histoffre])
+}
+
+model administrateur {
+  id_utilisateur Int         @id
+  utilisateur    utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model candidature {
+  id_candidature    Int                    @id @default(autoincrement())
+  etat_candidature  etat_candidature_enum?
+  lettre_motivation Boolean?
+  date_candidature  DateTime?              @db.Date
+  cv_candidature    Boolean?
+  id_offre          Int?
+  id_utilisateur    Int?
+  offre             offre?                 @relation(fields: [id_offre], references: [id_offre], onDelete: NoAction, onUpdate: NoAction)
+  etudiant          etudiant?              @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model compte {
+  login        String        @id @db.VarChar(15)
+  mot_de_passe String        @db.VarChar(255)
+  utilisateur  utilisateur[]
+}
+
+model enseignantresponsable {
+  id_utilisateur Int         @id
+  nom            String?     @db.VarChar(20)
+  prenom         String?     @db.VarChar(20)
+  utilisateur    utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model entreprise {
+  id_utilisateur     Int               @id
+  raison_sociale     String?           @db.VarChar(50)
+  domaine_entreprise String?           @db.VarChar(30)
+  adresse_entreprise String?           @db.VarChar(50)
+  siret_entreprise   String?           @db.VarChar(14)
+  utilisateur        utilisateur       @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+  historiqueoffre    historiqueoffre[]
+  offre              offre[]
+}
+
+model entreprisearchive {
+  id_histentreprise  Int               @id @default(autoincrement())
+  raison_sociale     String?           @db.VarChar(50)
+  domaine_entreprise String?           @db.VarChar(30)
+  adresse_entreprise String?           @db.VarChar(50)
+  siret_entreprise   String?           @unique @db.VarChar(14)
+  historiqueoffre    historiqueoffre[]
+}
+
+model etudiant {
+  id_utilisateur     Int                  @id
+  nom                String?              @db.VarChar(20)
+  prenom             String?              @db.VarChar(20)
+  date_naissance_etu DateTime?            @db.Date
+  niveau_etu         niveau_etu_enum?
+  statut_etu         statut_etu_enum?
+  attestation_rc     attestation_rc_enum?
+  visibilite_infos   Boolean?
+  candidature        candidature[]
+  utilisateur        utilisateur          @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model historiqueetudiantaccepte {
+  id_histetudiantaccepte Int              @id @default(autoincrement())
+  nom_etu                String?          @db.VarChar(20)
+  prenom_etu             String?          @db.VarChar(20)
+  niveau_etu             niveau_etu_enum?
+  a                      a[]
+}
+
+model historiqueoffre {
+  id_histoffre            Int                @id @default(autoincrement())
+  iltitule_offre_hist     String?            @db.VarChar(50)
+  type_contrat_hist       type_contrat_enum?
+  duree_contrat_hist      Int?
+  remuneration_offre_hist Int?
+  adresse_offre_hist      String?            @db.VarChar(50)
+  id_offre                Int?
+  id_histentreprise       Int?
+  id_utilisateur          Int?
+  a                       a[]
+  entreprisearchive       entreprisearchive? @relation(fields: [id_histentreprise], references: [id_histentreprise], onDelete: NoAction, onUpdate: NoAction)
+  entreprise              entreprise?        @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model notification {
+  id_notification Int          @id @default(autoincrement())
+  texte           String?      @db.VarChar(200)
+  lue             Boolean?
+  id_utilisateur  Int?
+  utilisateur     utilisateur? @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model offre {
+  id_offre           Int                @id @default(autoincrement())
+  intitule_offre     String?            @db.VarChar(150)
+  duree_validite     Int?
+  type_contrat       type_contrat_enum?
+  duree_contrat      Int?
+  date_debut_contrat DateTime?          @db.Date
+  date_fin_contrat   DateTime?          @db.Date
+  adresse_offre      String?            @db.VarChar(50)
+  remuneration_offre Int?
+  pays               String?            @db.VarChar(30)
+  etat_offre         etat_offre_enum?
+  id_utilisateur     Int?
+  candidature        candidature[]
+  entreprise         entreprise?        @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model secretaire {
+  id_utilisateur Int         @id
+  nom            String?     @db.VarChar(20)
+  prenom         String?     @db.VarChar(20)
+  utilisateur    utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model utilisateur {
+  id_utilisateur        Int                    @id @default(autoincrement())
+  mail                  String?                @unique @db.VarChar(50)
+  num_tel               String?                @db.VarChar(15)
+  login                 String?                @db.VarChar(15)
+  administrateur        administrateur?
+  enseignantresponsable enseignantresponsable?
+  entreprise            entreprise?
+  etudiant              etudiant?
+  notification          notification[]
+  secretaire            secretaire?
+  compte                compte?                @relation(fields: [login], references: [login], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum attestation_rc_enum {
+  non_remontee
+  disponible
+  validee
+}
+
+enum etat_candidature_enum {
+  en_attente
+  acceptee_par_entreprise
+  validee_par_enseignant
+  refusee
+  renoncee_par_etudiant
+}
+
+enum etat_offre_enum {
+  deposee
+  validee
+  refusee
+  en_modification
+  desactivee
+}
+
+enum niveau_etu_enum {
+  L1
+  L2
+  L3
+  M1M
+  M1S
+  M1T
+  M2M
+  M2S
+  M2T
+}
+
+enum statut_etu_enum {
+  en_recherche
+  non_en_recherche
+  en_emploi
+}
+
+enum type_contrat_enum {
+  CDD
+  stage
+  alternance
 }
