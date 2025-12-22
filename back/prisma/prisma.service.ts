@@ -1,6 +1,8 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client/extension';
+import {PrismaClient} from "@prisma/client"
+
+const prisma = new PrismaClient();
 
 @Injectable()
 export class PrismaService implements OnModuleDestroy {
@@ -73,7 +75,7 @@ export class PrismaService implements OnModuleDestroy {
       this.clients.set(role, client);
     }
 
-    return this.clients.get(role);
+    return this.clients.get(role)!;
   }
 
   async onModuleDestroy() {
