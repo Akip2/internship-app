@@ -24,7 +24,6 @@ export default function LoginForm(props: { className?: string }) {
             password: password
         }));
 
-        setLogin("");
         setPassword("");
 
         const resJson = await res.json();
