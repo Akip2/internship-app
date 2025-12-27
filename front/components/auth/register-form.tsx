@@ -1,4 +1,4 @@
-import InputDiv from "@/components/layout/input-div";
+import InputDiv from "@/components/shared/input-div";
 import { Button } from "@/components/ui/button"
 import { useState } from "react";
 
