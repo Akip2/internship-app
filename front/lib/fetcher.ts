@@ -1,5 +1,5 @@
-const host = process.env.NEXT_PUBLIC_API_HOST ?? "localhost";
-const port = process.env.NEXT_PUBLIC_API_PORT ?? "3000";
+const host = process.env.NEXT_PUBLIC_API_HOST ?? "http://localhost";
+const port = process.env.NEXT_PUBLIC_API_PORT ?? "4000";
 const headers = {
     'Content-Type': 'application/json',
 };
