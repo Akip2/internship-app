@@ -2,11 +2,13 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CompanyRegisterDto, LoginDto, UserDataDto, UserFoundDto } from './dto';
 import { PrismaService } from 'prisma/prisma.service';
 import * as bcrypt from "bcrypt";
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prismaService: PrismaService
+    private prismaService: PrismaService,
+    private jwtService: JwtService
   ) { }
 
   async login(body: LoginDto): Promise<UserDataDto> {
@@ -26,9 +28,16 @@ export class AuthService {
       throw new UnauthorizedException('Login ou mot de passe incorrects');
     }
 
+    const payload = {
+      userId: user.user_id,
+      userRole: user.user_role
+    };
+    const token = this.jwtService.sign(payload);
+
     return {
-      user_id: user.user_id,
-      user_role: user.user_role
+      token: token,
+      userId: user.user_id,
+      userRole: user.user_role
     };
   }
 

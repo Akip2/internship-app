@@ -67,11 +67,14 @@ export class UserFoundDto {
 }
 
 export class UserDataDto {
+    @IsString()
+    token: string;
+    
     @IsInt()
     @IsNotEmpty()
-    user_id: number;
+    userId: number;
 
     @IsString()
     @IsNotEmpty()
-    user_role: string;
+    userRole: string;
 }
