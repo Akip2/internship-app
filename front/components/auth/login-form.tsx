@@ -1,15 +1,16 @@
 import { useSession } from "@/providers/session-provider";
 import InputDiv from "@/components/shared/input-div";
 import { Button } from "@/components/ui/button"
-import { post } from "@/lib/fetcher";
 import { useState } from "react";
 import {useRouter} from "next/navigation";
+import { useApi } from "@/lib/fetcher";
 
 export default function LoginForm(props: { className?: string }) {
     const { className } = props;
 
     const router = useRouter();
-    const { setId, setRole } = useSession();
+    const { setToken, setRole } = useSession();
+    const { post } = useApi();
 
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
@@ -29,8 +30,8 @@ export default function LoginForm(props: { className?: string }) {
         const resJson = await res.json();
 
         if (res.ok) {
-            setId(resJson.user_id);
-            setRole(resJson.user_role);
+            setToken(resJson.token);
+            setRole(resJson.userRol);
             router.push("/");
         } else {
             setErrorMsg(resJson.message);

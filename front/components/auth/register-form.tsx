@@ -1,6 +1,6 @@
 import InputDiv from "@/components/shared/input-div";
 import { Button } from "@/components/ui/button"
-import { post } from "@/lib/fetcher";
+import { useApi } from "@/lib/fetcher";
 import { useSession } from "@/providers/session-provider";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -9,7 +9,8 @@ export default function RegisterForm(props: { className?: string }) {
     const { className } = props;
 
     const router = useRouter();
-    const { setId, setRole } = useSession();
+    const { setToken, setRole } = useSession();
+    const { post } = useApi();
 
     const [errorMsg, setErrorMsg] = useState("");
     const [login, setLogin] = useState("");
@@ -46,8 +47,8 @@ export default function RegisterForm(props: { className?: string }) {
         const resJson = await res.json();
 
         if (res.ok) {
-            setId(resJson.user_id);
-            setRole(resJson.user_role);
+            setToken(resJson.token);
+            setRole(resJson.userRole);
             router.push("/");
         } else {
             setErrorMsg(resJson.message);
