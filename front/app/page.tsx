@@ -5,7 +5,7 @@ import { useSession } from "@/providers/session-provider";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-    const { id } = useSession();
+    const { token: id } = useSession();
     const router = useRouter();
 
     useEffect(() => {

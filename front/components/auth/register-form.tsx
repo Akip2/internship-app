@@ -1,12 +1,21 @@
 import InputDiv from "@/components/shared/input-div";
 import { Button } from "@/components/ui/button"
+import { useApi } from "@/lib/fetcher";
+import { useSession } from "@/providers/session-provider";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function RegisterForm(props: { className?: string }) {
     const { className } = props;
 
+    const router = useRouter();
+    const { setToken, setRole } = useSession();
+    const { post } = useApi();
+
+    const [errorMsg, setErrorMsg] = useState("");
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
+    const [passwordConfirmation, setPasswordConfirmation] = useState("");
     const [siret, setSiret] = useState("");
     const [mail, setMail] = useState("");
     const [phone, setPhone] = useState("");
@@ -14,10 +23,36 @@ export default function RegisterForm(props: { className?: string }) {
     const [sector, setSector] = useState("");
     const [address, setAddress] = useState("");
 
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault()
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
 
-        console.log({ email: login, password })
+        if (password.trim() !== passwordConfirmation.trim()) {
+            setErrorMsg("Confirmation de mot de passe erronée");
+            return;
+        }
+        
+        setErrorMsg("");
+
+        const res = await post("auth/register", JSON.stringify({
+            login: login.trim().replace(" ", ""),
+            password: password.replace(" ", ""),
+            siret: siret.replace(" ", ""),
+            mail: mail.trim(),
+            phone: phone.replace(" ", ""),
+            sector: sector.trim(),
+            name: companyName.trim(),
+            address: address.trim()
+        }));
+
+        const resJson = await res.json();
+
+        if (res.ok) {
+            setToken(resJson.token);
+            setRole(resJson.userRole);
+            router.push("/");
+        } else {
+            setErrorMsg(resJson.message);
+        }
     }
 
     return (
@@ -27,7 +62,7 @@ export default function RegisterForm(props: { className?: string }) {
                 type="text"
                 required
                 value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                onChange={(e) => setLogin(e.target.value.replace(" ", ""))}
             />
 
             <InputDiv
@@ -35,7 +70,15 @@ export default function RegisterForm(props: { className?: string }) {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value.replace(" ", ""))}
+            />
+
+            <InputDiv
+                label="Confirmer le mot de passe"
+                type="password"
+                required
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value.replace(" ", ""))}
             />
 
             <div className="div-group">
@@ -92,9 +135,13 @@ export default function RegisterForm(props: { className?: string }) {
                 />
             </div>
 
-            <Button type="submit" className="w-full">
-                S'inscrire
-            </Button>
+            <div>
+                <Button type="submit" className="w-full">
+                    S'inscrire
+                </Button>
+
+                <p className="text-sm text-center text-red-400 font-bold h-0.5 mt-2">{errorMsg}</p>
+            </div>
         </form>
     )
 }

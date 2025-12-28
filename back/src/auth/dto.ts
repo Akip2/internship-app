@@ -1,6 +1,6 @@
 import { IsEmail, IsEmpty, IsInt, IsNotEmpty, IsPhoneNumber, IsString, Length, MinLength } from "class-validator";
 
-const MIN_LOGIN_LENGTH = 5;
+const MIN_LOGIN_LENGTH = 3;
 const MIN_PASSWORD_LENGTH = 6;
 
 export class LoginDto {
