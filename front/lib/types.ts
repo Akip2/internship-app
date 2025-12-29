@@ -3,7 +3,13 @@ export type Tab = {
     content: React.ReactNode;
 };
 
-export type Account = {
-    id: string;
-    name: string;
-};
+export type UserAccount = {
+    id_utilisateur: number,
+    nom: string,
+    prenom: string,
+    utilisateur: {
+        mail: string,
+        num_tel: string,
+        login: string
+    }
+}

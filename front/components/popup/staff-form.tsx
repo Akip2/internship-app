@@ -13,7 +13,6 @@ export default function StaffForm(props: { className?: string, type: StaffType }
     const [lastName, setLastName] = useState("");
     const [mail, setMail] = useState("");
     const [phone, setPhone] = useState("");
-    const [speciality, setSpeciality] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirmation, setPasswordConfirmation] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
@@ -34,7 +33,6 @@ export default function StaffForm(props: { className?: string, type: StaffType }
             password: password.replace(" ", ""),
             mail: mail.trim(),
             phone: phone.replace(" ", ""),
-            speciality: speciality.trim(),
         }));
     }
 
@@ -78,16 +76,6 @@ export default function StaffForm(props: { className?: string, type: StaffType }
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                 />
-
-                {type === StaffType.ENSEIGNANT && (
-                    <InputDiv
-                        label="Spécialité / Profession"
-                        type="text"
-                        required={true}
-                        value={speciality}
-                        onChange={(e) => setSpeciality(e.target.value)}
-                    />
-                )}
 
                 <InputDiv
                     label="Mot de passe"

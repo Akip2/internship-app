@@ -1,7 +1,10 @@
+import { useSession } from "@/providers/session-provider";
 import { Button } from "../ui/button";
 
 export default function Header(props: { className?: string }) {
     const { className } = props;
+
+    const { logOut } = useSession();
 
     return (
         <header className={`bg-white border-b ${className}`}>
@@ -14,8 +17,7 @@ export default function Header(props: { className?: string }) {
                 </div>
 
                 <div className="flex gap-3">
-                    <Button variant="secondary">Consulter les archives</Button>
-                    <Button variant="destructive">
+                    <Button variant="destructive" onClick={logOut}>
                         Se déconnecter
                     </Button>
                 </div>

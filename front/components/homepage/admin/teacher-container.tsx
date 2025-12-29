@@ -2,16 +2,17 @@ import StaffForm from "@/components/popup/staff-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StaffType } from "@/enums/staff-type";
-import { Account } from "@/lib/types";
+import { UserAccount } from "@/lib/types";
 import { usePopup } from "@/providers/popup-provider";
+import StaffCard from "./staff-card";
 
-export default function TeacherContainer(props: { className?: string, teachers: Account[] }) {
+export default function TeacherContainer(props: { className?: string, teachers: UserAccount[] }) {
     const { className, teachers } = props;
 
     const { openPopup } = usePopup();
 
     function displayForm() {
-        openPopup(<StaffForm type={StaffType.ENSEIGNANT}/>)
+        openPopup(<StaffForm type={StaffType.ENSEIGNANT} />)
     }
 
     return (
@@ -22,10 +23,7 @@ export default function TeacherContainer(props: { className?: string, teachers: 
 
             {teachers.length > 0 ? (
                 teachers.map((teach, idx) => (
-                    <div key={idx} className="flex items-center justify-between">
-                        <span>{teach.name}</span>
-                        <Button>Modifier</Button>
-                    </div>
+                    <StaffCard key={idx}  user={teach}/>
                 ))) :
                 (
                     <span className="text-gray-500">Aucun enseignant</span>

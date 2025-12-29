@@ -1,7 +1,7 @@
 "use client";
 
 import { useApi } from "@/lib/fetcher";
-import { Account } from "@/lib/types";
+import { UserAccount } from "@/lib/types";
 import { useEffect, useState } from "react";
 import TeacherContainer from "./teacher-container";
 import SecretaryContainer from "./secretary-container";
@@ -10,8 +10,8 @@ export default function AccountManagement(props: { className?: string }) {
     const { className } = props;
     const { get } = useApi();
 
-    const [secretaries, setSecretaries] = useState<Account[]>([]);
-    const [teachers, setTeachers] = useState<Account[]>([]);
+    const [secretaries, setSecretaries] = useState<UserAccount[]>([]);
+    const [teachers, setTeachers] = useState<UserAccount[]>([]);
 
     useEffect(() => {
         async function fetchAccounts() {
@@ -23,7 +23,9 @@ export default function AccountManagement(props: { className?: string }) {
             }
 
             if (teachRes.ok) {
-                setTeachers(await teachRes.json());
+                const res = await teachRes.json()
+                console.log(res);
+                setTeachers(res);
             }
         }
 
