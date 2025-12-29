@@ -1,9 +1,18 @@
+import StaffForm from "@/components/popup/staff-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { StaffType } from "@/enums/staff-type";
 import { Account } from "@/lib/types";
+import { usePopup } from "@/providers/popup-provider";
 
 export default function TeacherContainer(props: { className?: string, teachers: Account[] }) {
     const { className, teachers } = props;
+
+    const { openPopup } = usePopup();
+
+    function displayForm() {
+        openPopup(<StaffForm type={StaffType.ENSEIGNANT}/>)
+    }
 
     return (
         <Card className={`p-6 space-y-4 ${className}`}>
@@ -22,7 +31,7 @@ export default function TeacherContainer(props: { className?: string, teachers: 
                     <span className="text-gray-500">Aucun enseignant</span>
                 )}
 
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button className="bg-green-600 hover:bg-green-700" onClick={displayForm}>
                 Ajouter un Enseignant Responsable
             </Button>
         </Card>

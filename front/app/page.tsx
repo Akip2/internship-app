@@ -23,7 +23,7 @@ const tabs: Tab[] = [
 export default function HomePage() {
   const { token } = useSession();
   const router = useRouter();
-
+/*
   useEffect(() => {
     if (token.length === 0) {
       router.push("/login");
@@ -31,7 +31,7 @@ export default function HomePage() {
   }, [token, router]);
 
   if (token.length === 0) return null;
-
+*/
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />

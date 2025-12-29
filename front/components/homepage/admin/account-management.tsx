@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useApi } from "@/lib/fetcher";
 import { Account } from "@/lib/types";
 import { useEffect, useState } from "react";
