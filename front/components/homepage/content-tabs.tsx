@@ -16,8 +16,9 @@ export default function ContentTabs(props: {
         <div className={className}>
             <div className="border-b bg-white">
                 <div className="max-w-7xl mx-auto flex gap-6 px-6">
-                    {tabs.map((tab) => (
+                    {tabs.map((tab, idx) => (
                         <TabButton
+                            key={idx}
                             active={tab.label === activeTab}
                             onClick={() => setActiveTab(tab.label)}
                         >
