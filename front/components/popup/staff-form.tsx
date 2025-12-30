@@ -7,8 +7,8 @@ import { usePopup } from "@/providers/popup-provider";
 import LoadingPopup from "./loading-popup";
 import ResultPopup from "./result-popup";
 
-export default function StaffForm(props: { className?: string, type: StaffType }) {
-    const { className, type } = props;
+export default function StaffForm(props: { className?: string, type: StaffType, onAccountAdded: () => Promise<void> }) {
+    const { className, type, onAccountAdded } = props;
 
     const { openPopup } = usePopup();
     const { post } = useApi();
@@ -51,6 +51,8 @@ export default function StaffForm(props: { className?: string, type: StaffType }
                         message="Le compte a été créé avec succès"
                     />
                 );
+
+                onAccountAdded();
             } else {
                 openPopup(
                     <ResultPopup

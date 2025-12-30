@@ -6,17 +6,17 @@ import { usePopup } from "@/providers/popup-provider";
 import StaffCard from "./staff-card";
 import { Button } from "@/components/ui/button";
 
-export default function StaffContainer(props: { className?: string, type: StaffType, accounts: UserAccount[] }) {
-    const { className, type, accounts } = props;
+export default function StaffContainer(props: { className?: string, type: StaffType, accounts: UserAccount[], onAccountAdded: () => Promise<void> }) {
+    const { className, type, accounts, onAccountAdded } = props;
 
     const { openPopup } = usePopup();
 
     function displayForm() {
-        openPopup(<StaffForm type={type} />)
+        openPopup(<StaffForm type={type} onAccountAdded={onAccountAdded} />)
     }
 
     return (
-        <Card className={`p-6 space-y-4 ${className}`}>
+        <Card className={`p-6 ${className}`}>
             <h3 className="text-lg font-semibold">{type}(s)</h3>
 
             {accounts.length > 0 ? (

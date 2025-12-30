@@ -13,22 +13,21 @@ export default function AccountManagement(props: { className?: string }) {
     const [secretaries, setSecretaries] = useState<UserAccount[]>([]);
     const [teachers, setTeachers] = useState<UserAccount[]>([]);
 
-    useEffect(() => {
-        async function fetchAccounts() {
-            const secRes = await get("accounts/secretaire");
-            const teachRes = await get("accounts/enseignant");
+    async function fetchAccounts() {
+        const secRes = await get("accounts/secretaire");
+        const teachRes = await get("accounts/enseignant");
 
-            if (secRes.ok) {
-                setSecretaries(await secRes.json());
-            }
-
-            if (teachRes.ok) {
-                const res = await teachRes.json()
-                console.log(res);
-                setTeachers(res);
-            }
+        if (secRes.ok) {
+            setSecretaries(await secRes.json());
         }
 
+        if (teachRes.ok) {
+            const res = await teachRes.json()
+            setTeachers(res);
+        }
+    }
+
+    useEffect(() => {
         fetchAccounts();
     }, []);
 
@@ -36,8 +35,8 @@ export default function AccountManagement(props: { className?: string }) {
         <section className={`space-y-8 ${className ?? ""}`}>
             <h2 className="text-2xl font-semibold">Gestion des comptes</h2>
 
-            <StaffContainer accounts={teachers} type={StaffType.ENSEIGNANT} />
-            <StaffContainer accounts={secretaries} type={StaffType.SECRETAIRE} />
+            <StaffContainer accounts={teachers} type={StaffType.ENSEIGNANT} onAccountAdded={fetchAccounts}/>
+            <StaffContainer accounts={secretaries} type={StaffType.SECRETAIRE} onAccountAdded={fetchAccounts}/>
         </section>
     );
 }
