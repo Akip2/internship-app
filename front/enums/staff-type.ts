@@ -1,4 +1,4 @@
 export enum StaffType {
-    ENSEIGNANT = "enseignant",
-    SECRETAIRE = "secretaire",
+    ENSEIGNANT = "Enseignant",
+    SECRETAIRE = "Secretaire",
 }

@@ -3,8 +3,8 @@
 import { useApi } from "@/lib/fetcher";
 import { UserAccount } from "@/lib/types";
 import { useEffect, useState } from "react";
-import TeacherContainer from "./teacher-container";
-import SecretaryContainer from "./secretary-container";
+import StaffContainer from "./staff-container";
+import { StaffType } from "@/enums/staff-type";
 
 export default function AccountManagement(props: { className?: string }) {
     const { className } = props;
@@ -36,8 +36,8 @@ export default function AccountManagement(props: { className?: string }) {
         <section className={`space-y-8 ${className ?? ""}`}>
             <h2 className="text-2xl font-semibold">Gestion des comptes</h2>
 
-            <TeacherContainer teachers={teachers} />
-            <SecretaryContainer secretaries={secretaries}/>
+            <StaffContainer accounts={teachers} type={StaffType.ENSEIGNANT} />
+            <StaffContainer accounts={secretaries} type={StaffType.SECRETAIRE} />
         </section>
     );
 }
