@@ -2,9 +2,12 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from "bcrypt";
 import { CreateAccountDto } from './dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AccountsService {
+  constructor(private readonly mailService: MailService) { }
+
   async getSecretaires(client: PrismaClient) {
     return client.secretaire.findMany({
       include: {
@@ -89,6 +92,12 @@ export class AccountsService {
       }
     });
 
+    try {
+      await this.mailService.sendAccountCredentials(dto, login);
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+    }
+
     return {
       message: 'Secrétaire créé avec succès',
       login,
@@ -149,6 +158,12 @@ export class AccountsService {
         }
       }
     });
+
+    try {
+      await this.mailService.sendAccountCredentials(dto, login);
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+    }
 
     return {
       message: 'Enseignant créé avec succès',

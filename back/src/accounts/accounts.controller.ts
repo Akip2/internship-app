@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { PrismaService } from 'prisma/prisma.service';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateAccountDto } from './dto';
 
 @Controller("accounts")
+@UseGuards(JwtAuthGuard)
 export class AccountsController {
     constructor(
         private readonly accountsService: AccountsService,
