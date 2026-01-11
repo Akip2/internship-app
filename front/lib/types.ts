@@ -7,9 +7,7 @@ export type UserAccount = {
     id_utilisateur: number,
     nom: string,
     prenom: string,
-    utilisateur: {
-        mail: string,
-        num_tel: string,
-        login: string
-    }
+    num_tel: string,
+    login: string,
+    mail: string
 }

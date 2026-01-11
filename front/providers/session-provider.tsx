@@ -6,9 +6,11 @@ import React, { createContext, useState, useContext, ReactNode } from "react";
 interface SessionContextType {
   token: string;
   role: UserRole;
+  login: string;
 
   setToken: React.Dispatch<React.SetStateAction<string>>;
-  setRole: React.Dispatch<React.SetStateAction<UserRole>>
+  setRole: React.Dispatch<React.SetStateAction<UserRole>>;
+  setLogin: React.Dispatch<React.SetStateAction<string>>
   logOut: () => void;
 }
 
@@ -18,6 +20,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   
   const [token, setToken] = useState("");
+  const [login, setLogin] = useState("");
   const [role, setRole] = useState<UserRole>(UserRole.INTERNAUTE);
 
   const logOut = () => {
@@ -27,7 +30,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <SessionContext.Provider value={{ token, role, setToken, setRole, logOut }}>
+    <SessionContext.Provider value={{ token, login, role, setToken, setLogin, setRole, logOut }}>
       {children}
     </SessionContext.Provider>
   );

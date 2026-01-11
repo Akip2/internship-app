@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { UserAccount } from "@/lib/types";
 
 export default function StaffCard(props: { user: UserAccount }) {
@@ -17,13 +16,9 @@ export default function StaffCard(props: { user: UserAccount }) {
                         {user.prenom} {user.nom}
                     </p>
 
-                    <p>{user.utilisateur.login}</p>
+                    <p>{user.login}</p>
                 </div>
             </div>
-
-            <Button>
-                Modifier
-            </Button>
         </div>
     )
 }

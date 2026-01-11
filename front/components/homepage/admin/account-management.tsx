@@ -18,7 +18,8 @@ export default function AccountManagement(props: { className?: string }) {
         const teachRes = await get("accounts/enseignant");
 
         if (secRes.ok) {
-            setSecretaries(await secRes.json());
+            const res = await secRes.json()
+            setSecretaries(res);
         }
 
         if (teachRes.ok) {

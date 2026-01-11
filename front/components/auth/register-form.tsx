@@ -9,11 +9,11 @@ export default function RegisterForm(props: { className?: string }) {
     const { className } = props;
 
     const router = useRouter();
-    const { setToken, setRole } = useSession();
+    const { setToken, setRole, setLogin } = useSession();
     const { post } = useApi();
 
     const [errorMsg, setErrorMsg] = useState("");
-    const [login, setLogin] = useState("");
+    const [loginForm, setLoginForm] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirmation, setPasswordConfirmation] = useState("");
     const [siret, setSiret] = useState("");
@@ -34,7 +34,7 @@ export default function RegisterForm(props: { className?: string }) {
         setErrorMsg("");
 
         const res = await post("auth/register", JSON.stringify({
-            login: login.trim().replace(" ", ""),
+            login: loginForm.trim().replace(" ", ""),
             password: password.replace(" ", ""),
             siret: siret.replace(" ", ""),
             mail: mail.trim(),
@@ -48,7 +48,8 @@ export default function RegisterForm(props: { className?: string }) {
 
         if (res.ok) {
             setToken(resJson.token);
-            setRole(resJson.userRole);
+            setRole(resJson.user.role);
+            setLogin(resJson.user.login);
             router.push("/");
         } else {
             setErrorMsg(resJson.message);
@@ -61,8 +62,8 @@ export default function RegisterForm(props: { className?: string }) {
                 label="Login"
                 type="text"
                 required
-                value={login}
-                onChange={(e) => setLogin(e.target.value.replace(" ", ""))}
+                value={loginForm}
+                onChange={(e) => setLoginForm(e.target.value.replace(" ", ""))}
             />
 
             <InputDiv
