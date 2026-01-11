@@ -9,7 +9,7 @@ export default function LoginForm(props: { className?: string }) {
     const { className } = props;
 
     const router = useRouter();
-    const { setToken, setRole, setLogin } = useSession();
+    const { setSession } = useSession();
     const { post } = useApi();
 
     const [loginForm, setLoginForm] = useState("");
@@ -32,9 +32,11 @@ export default function LoginForm(props: { className?: string }) {
         console.log(resJson);
 
         if (res.ok) {
-            setToken(resJson.token);
-            setRole(resJson.user.role);
-            setLogin(resJson.user.login);
+            setSession({
+                token: resJson.token,
+                login: resJson.user.login,
+                role: resJson.user.role
+            });
             router.push("/");
         } else {
             setErrorMsg(resJson.message);

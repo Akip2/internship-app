@@ -9,7 +9,7 @@ export default function RegisterForm(props: { className?: string }) {
     const { className } = props;
 
     const router = useRouter();
-    const { setToken, setRole, setLogin } = useSession();
+    const { setSession } = useSession();
     const { post } = useApi();
 
     const [errorMsg, setErrorMsg] = useState("");
@@ -47,9 +47,11 @@ export default function RegisterForm(props: { className?: string }) {
         const resJson = await res.json();
 
         if (res.ok) {
-            setToken(resJson.token);
-            setRole(resJson.user.role);
-            setLogin(resJson.user.login);
+            setSession({
+                token: resJson.token,
+                login: resJson.user.login,
+                role: resJson.user.role
+            });
             router.push("/");
         } else {
             setErrorMsg(resJson.message);
