@@ -1,183 +1,154 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import * as bcrypt from "bcrypt";
+import { Injectable, ConflictException } from '@nestjs/common';
+import { DatabaseService } from '../database/database.service';
+import { MailService } from '../mail/mail.service';
 import { CreateAccountDto } from './dto';
-import { MailService } from 'src/mail/mail.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AccountsService {
-  constructor(private readonly mailService: MailService) { }
+  constructor(
+    private db: DatabaseService,
+    private mailService: MailService,
+  ) {}
 
-  async getSecretaires(client: PrismaClient) {
-    return client.secretaire.findMany({
-      include: {
-        utilisateur: {
-          select: {
-            id_utilisateur: true,
-            mail: true,
-            num_tel: true,
-            login: true,
-          }
-        }
+  // Récupérer tous les secrétaires
+  async getSecretaires(userRole: string) {
+    // Utilise la connexion correspondant au rôle de l'utilisateur connecté
+    const result = await this.db.query(
+      userRole, // Le rôle vient du JWT !
+      `SELECT 
+        s.id_utilisateur,
+        s.nom,
+        s.prenom,
+        u.mail,
+        u.num_tel,
+        u.login
+      FROM Secretaire s
+      JOIN Utilisateur u ON s.id_utilisateur = u.id_utilisateur
+      ORDER BY s.nom, s.prenom`
+    );
+    return result.rows;
+  }
+
+  // Récupérer tous les enseignants
+  async getEnseignants(userRole: string) {
+    const result = await this.db.query(
+      userRole,
+      `SELECT 
+        e.id_utilisateur,
+        e.nom,
+        e.prenom,
+        u.mail,
+        u.num_tel,
+        u.login
+      FROM EnseignantResponsable e
+      JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
+      ORDER BY e.nom, e.prenom`
+    );
+    return result.rows;
+  }
+
+  // Créer un secrétaire
+  async createSecretaire(userRole: string, dto: CreateAccountDto) {
+    return await this.db.transaction(userRole, async (client) => {
+      const loginResult = await client.query(
+        'SELECT generate_login($1) as login',
+        [dto.lastName]
+      );
+      const login = loginResult.rows[0].login;
+
+      const checkMail = await client.query(
+        'SELECT 1 FROM Utilisateur WHERE mail = $1',
+        [dto.mail]
+      );
+      if (checkMail.rows.length > 0) {
+        throw new ConflictException('Email déjà utilisé');
       }
+
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+      await client.query(
+        'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
+        [login, hashedPassword]
+      );
+
+      const userResult = await client.query(
+        'INSERT INTO Utilisateur (mail, num_tel, login) VALUES ($1, $2, $3) RETURNING id_utilisateur',
+        [dto.mail, dto.phone, login]
+      );
+      const idUtilisateur = userResult.rows[0].id_utilisateur;
+
+      // Crée le secrétaire
+      await client.query(
+        'INSERT INTO Secretaire (id_utilisateur, nom, prenom) VALUES ($1, $2, $3)',
+        [idUtilisateur, dto.lastName, dto.firstName]
+      );
+
+      return { login, idUtilisateur };
+    }).then(async (result) => {
+      try {
+        await this.mailService.sendAccountCredentials(dto, result.lo
+        );
+      } catch (error) {
+        console.error('Erreur envoi email:', error);
+      }
+
+      return {
+        message: 'Secrétaire créé avec succès',
+        login: result.login,
+      };
     });
   }
 
-  async getEnseignants(client: PrismaClient) {
-    return client.enseignantresponsable.findMany({
-      include: {
-        utilisateur: {
-          select: {
-            id_utilisateur: true,
-            mail: true,
-            num_tel: true,
-            login: true,
-          }
-        }
+  // Créer un enseignant
+  async createEnseignant(userRole: string, dto: CreateAccountDto) {
+    return await this.db.transaction(userRole, async (client) => {
+      const loginResult = await client.query(
+        'SELECT generate_login($1) as login',
+        [dto.lastName]
+      );
+      const login = loginResult.rows[0].login;
+
+      const checkMail = await client.query(
+        'SELECT 1 FROM Utilisateur WHERE mail = $1',
+        [dto.mail]
+      );
+      if (checkMail.rows.length > 0) {
+        throw new ConflictException('Email déjà utilisé');
       }
-    });
-  }
 
-  async createSecretaire(client: PrismaClient, dto: CreateAccountDto) {
-    const login = await this.generateLogin(client, dto.lastName);
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const existingCompte = await client.compte.findUnique({
-      where: { login }
-    });
+      await client.query(
+        'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
+        [login, hashedPassword]
+      );
 
-    if (existingCompte) {
-      throw new ConflictException(`Le login ${login} existe déjà`);
-    }
+      const userResult = await client.query(
+        'INSERT INTO Utilisateur (mail, num_tel, login) VALUES ($1, $2, $3) RETURNING id_utilisateur',
+        [dto.mail, dto.phone, login]
+      );
+      const idUtilisateur = userResult.rows[0].id_utilisateur;
 
-    const existingUser = await client.utilisateur.findUnique({
-      where: { mail: dto.mail }
-    });
+      await client.query(
+        'INSERT INTO EnseignantResponsable (id_utilisateur, nom, prenom) VALUES ($1, $2, $3)',
+        [idUtilisateur, dto.lastName, dto.firstName]
+      );
 
-    if (existingUser) {
-      throw new ConflictException(`L'email ${dto.mail} est déjà utilisé`);
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-
-    await client.compte.create({
-      data: {
-        login,
-        mot_de_passe: hashedPassword,
+      return { login, idUtilisateur };
+    }).then(async (result) => {
+      try {
+        await this.mailService.sendAccountCredentials(
+          dto, result.login
+        );
+      } catch (error) {
+        console.error('Erreur envoi email:', error);
       }
+
+      return {
+        message: 'Enseignant créé avec succès',
+        login: result.login,
+      };
     });
-
-    const utilisateur = await client.utilisateur.create({
-      data: {
-        mail: dto.mail,
-        num_tel: dto.phone,
-        login,
-      }
-    });
-
-    const secretaire = await client.secretaire.create({
-      data: {
-        id_utilisateur: utilisateur.id_utilisateur,
-        nom: dto.lastName,
-        prenom: dto.firstName,
-      },
-      include: {
-        utilisateur: {
-          select: {
-            id_utilisateur: true,
-            mail: true,
-            num_tel: true,
-            login: true,
-          }
-        }
-      }
-    });
-
-    try {
-      await this.mailService.sendAccountCredentials(dto, login);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'email:', error);
-    }
-
-    return {
-      message: 'Secrétaire créé avec succès',
-      login,
-      secretaire,
-    };
-  }
-
-  async createEnseignant(client: PrismaClient, dto: CreateAccountDto) {
-    const login = await this.generateLogin(client, dto.lastName);
-
-    const existingCompte = await client.compte.findUnique({
-      where: { login }
-    });
-
-    if (existingCompte) {
-      throw new ConflictException(`Le login ${login} existe déjà`);
-    }
-
-    const existingUser = await client.utilisateur.findUnique({
-      where: { mail: dto.mail }
-    });
-
-    if (existingUser) {
-      throw new ConflictException(`L'email ${dto.mail} est déjà utilisé`);
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-
-    await client.compte.create({
-      data: {
-        login,
-        mot_de_passe: hashedPassword,
-      }
-    });
-
-    const utilisateur = await client.utilisateur.create({
-      data: {
-        mail: dto.mail,
-        num_tel: dto.phone,
-        login,
-      }
-    });
-
-    const enseignant = await client.enseignantresponsable.create({
-      data: {
-        id_utilisateur: utilisateur.id_utilisateur,
-        nom: dto.lastName,
-        prenom: dto.firstName,
-      },
-      include: {
-        utilisateur: {
-          select: {
-            id_utilisateur: true,
-            mail: true,
-            num_tel: true,
-            login: true,
-          }
-        }
-      }
-    });
-
-    try {
-      await this.mailService.sendAccountCredentials(dto, login);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'email:', error);
-    }
-
-    return {
-      message: 'Enseignant créé avec succès',
-      login,
-      enseignant,
-    };
-  }
-
-  private async generateLogin(client: PrismaClient, lastName: string): Promise<string> {
-    const loginResult: any = await client.$queryRaw`
-            SELECT generate_login(${lastName}) as login
-        `;
-    const login = loginResult[0].login;
-
-    return login;
   }
 }
