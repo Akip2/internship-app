@@ -13,7 +13,7 @@ export class AuthController {
 
   @Post("register")
   async register(@Body() dto: CompanyRegisterDto) {
-    const result = await this.authService.registerCompany(dto);
+    const result = await this.authService.registerEntreprise(dto);
 
     if(!result) {
       throw new UnauthorizedException("Echec de l'inscription, login déjà existant");
