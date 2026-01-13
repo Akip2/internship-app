@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useApi } from "@/lib/fetcher";
+import InputDiv from "../shared/input-div";
+import { useSession } from "@/providers/session-provider";
+import { usePopup } from "@/providers/popup-provider";
+import PasswordForm from "./password-form";
 
 export default function ProfileForm() {
     const { put, get } = useApi();
+    const { role } = useSession();
+    const { openPopup } = usePopup();
     const [profile, setProfile] = useState<any | null>(null);
 
     useEffect(() => {
@@ -29,78 +34,128 @@ export default function ProfileForm() {
         }));
     };
 
-    const save = async () => {
+    const save = async (e: React.FormEvent) => {
+        e.preventDefault();
+
         const res = await put("accounts/me", profile);
-        if (res.ok) {
-            alert("Profil mis à jour");
-        } else {
-            alert("Erreur lors de la mise à jour");
-        }
+        alert(res.ok ? "Profil mis à jour" : "Erreur lors de la mise à jour");
     };
 
+    const passwordChangePopup = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        openPopup(<PasswordForm />);
+    }
+
     return (
-        <div className="max-w-xl mx-auto p-6 space-y-4">
+        <form className="min-w-lg space-y-8" onSubmit={save}>
             <h1 className="text-xl font-semibold">Mon profil</h1>
 
-            <Input
+            <InputDiv
+                label="Email"
                 name="mail"
-                value={profile.mail}
-                disabled
+                type="email"
+                value={profile.mail ?? ""}
+                onChange={handleChange}
+                required
             />
 
-            <Input
+            <div className="div-group">
+                <InputDiv
+                    label="Mot de passe"
+                    name="password"
+                    type="password"
+                    value={"password"}
+                    disabled
+                />
+
+                <Button className="self-end" variant={"destructive"} onClick={passwordChangePopup}>Modifier</Button>
+            </div>
+
+            <InputDiv
+                label="Téléphone"
                 name="num_tel"
+                type="tel"
                 value={profile.num_tel ?? ""}
                 onChange={handleChange}
-                placeholder="Téléphone"
+                required
             />
 
-            {profile.role === "entreprise" ? (
+            {role === "entreprise" && (
                 <>
-                    <Input
+                    <InputDiv
+                        label="Raison sociale"
                         name="raison_sociale"
+                        type="text"
                         value={profile.raison_sociale ?? ""}
                         onChange={handleChange}
-                        placeholder="Raison sociale"
+                        required
                     />
 
-                    <Input
+                    <InputDiv
+                        label="Domaine d'activité"
+                        name="domaine_entreprise"
+                        type="text"
+                        value={profile.domaine_entreprise ?? ""}
+                        onChange={handleChange}
+                        required
+                    />
+
+                    <InputDiv
+                        label="Adresse"
+                        name="adresse_entreprise"
+                        type="text"
+                        value={profile.adresse_entreprise ?? ""}
+                        onChange={handleChange}
+                        required
+                    />
+
+                    <InputDiv
+                        label="SIRET"
                         name="siret"
-                        value={profile.siret ?? ""}
+                        type="text"
+                        value={profile.siret_entreprise ?? ""}
                         disabled
                     />
                 </>
-            )
-                : (
-                    <>
-                        <Input
-                            name="prenom"
-                            value={profile.prenom ?? ""}
-                            onChange={handleChange}
-                            placeholder="Prénom"
+            )}
+
+            {role !== "admin" && role !== "entreprise" && (
+                <>
+                    <InputDiv
+                        label="Prénom"
+                        name="prenom"
+                        type="text"
+                        value={profile.prenom ?? ""}
+                        onChange={handleChange}
+                        required
+                    />
+
+                    <InputDiv
+                        label="Nom"
+                        name="nom"
+                        type="text"
+                        value={profile.nom ?? ""}
+                        onChange={handleChange}
+                        required
+                    />
+
+                    {role === "etudiant" && (
+                        <InputDiv
+                            label="Niveau"
+                            name="niveau_etu"
+                            type="text"
+                            required
+                            value={profile.niveau_etu ?? ""}
+                            disabled
                         />
+                    )}
+                </>
+            )}
 
-                        <Input
-                            name="nom"
-                            value={profile.nom ?? ""}
-                            onChange={handleChange}
-                            placeholder="Nom"
-                        />
-
-                        {profile.role === "etudiant" && (
-                            <Input
-                                name="niveau_etu"
-                                value={profile.niveau_etu ?? ""}
-                                disabled
-                            />
-                        )}
-                    </>
-                )
-            }
-
-            <Button onClick={save}>
+            <Button type="submit">
                 Enregistrer
             </Button>
-        </div>
+        </form>
     );
 }
