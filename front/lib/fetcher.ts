@@ -2,15 +2,14 @@ import { useSession } from "@/providers/session-provider";
 
 const host = process.env.NEXT_PUBLIC_API_HOST ?? "http://localhost";
 const port = process.env.NEXT_PUBLIC_API_PORT ?? "4000";
-const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': ""
-};
 
 export function useApi() {
     const { token } = useSession();
 
-    headers.Authorization = token;
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+    };
 
     const get = (endpoint: string) => {
         return fetch(`${host}:${port}/${endpoint}`, {
@@ -28,5 +27,13 @@ export function useApi() {
         });
     }
 
-    return { get, post };
+    const put = (endpoint: string, body: any) => {
+        return fetch(`${host}:${port}/${endpoint}`, {
+            method: "PUT",
+            headers: headers,
+            body: JSON.stringify(body),
+        });
+    };
+
+    return { get, post, put };
 }

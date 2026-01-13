@@ -4,14 +4,12 @@ import InputDiv from "../shared/input-div";
 import { Button } from "../ui/button";
 import { useApi } from "@/lib/fetcher";
 import { usePopup } from "@/providers/popup-provider";
-import LoadingPopup from "./loading-popup";
-import ResultPopup from "./result-popup";
 
 export default function StaffForm(props: { className?: string, type: StaffType, onAccountAdded: () => Promise<void> }) {
     const { className, type, onAccountAdded } = props;
 
-    const { openPopup } = usePopup();
     const { post } = useApi();
+    const { closePopup} = usePopup();
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -31,8 +29,6 @@ export default function StaffForm(props: { className?: string, type: StaffType, 
 
         setErrorMsg("");
 
-        openPopup(<LoadingPopup />);
-
         try {
             const res = await post(`accounts/${type}`, JSON.stringify({
                 firstName: firstName.trim(),
@@ -41,33 +37,17 @@ export default function StaffForm(props: { className?: string, type: StaffType, 
                 mail: mail.trim(),
                 phone: phone.replace(" ", ""),
             }));
-
-            const data = await res.json();
-
+            
             if (res.ok) {
-                openPopup(
-                    <ResultPopup
-                        success
-                        message="Le compte a été créé avec succès"
-                    />
-                );
+                closePopup();
+                alert("Le compte a été créé avec succès");
 
                 onAccountAdded();
             } else {
-                openPopup(
-                    <ResultPopup
-                        success={false}
-                        message={data.message ?? "Erreur lors de la création"}
-                    />
-                );
+                alert("Erreur lors de la création");
             }
         } catch {
-            openPopup(
-                <ResultPopup
-                    success={false}
-                    message="Erreur réseau"
-                />
-            );
+            alert("Erreur réseau");
         }
     }
 
