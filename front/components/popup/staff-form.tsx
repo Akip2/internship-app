@@ -15,17 +15,10 @@ export default function StaffForm(props: { className?: string, type: StaffType, 
     const [lastName, setLastName] = useState("");
     const [mail, setMail] = useState("");
     const [phone, setPhone] = useState("");
-    const [password, setPassword] = useState("");
-    const [passwordConfirmation, setPasswordConfirmation] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-
-        if (password.trim() !== passwordConfirmation.trim()) {
-            setErrorMsg("Confirmation de mot de passe erronée");
-            return;
-        }
 
         setErrorMsg("");
 
@@ -33,7 +26,6 @@ export default function StaffForm(props: { className?: string, type: StaffType, 
             const res = await post(`accounts/${type}`, JSON.stringify({
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
-                password: password.replace(" ", ""),
                 mail: mail.trim(),
                 phone: phone.replace(" ", ""),
             }));
@@ -90,22 +82,6 @@ export default function StaffForm(props: { className?: string, type: StaffType, 
                     required={true}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                />
-
-                <InputDiv
-                    label="Mot de passe"
-                    type="password"
-                    required={true}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value.replace(" ", ""))}
-                />
-
-                <InputDiv
-                    label="Confirmer le mot de passe"
-                    type="password"
-                    required={true}
-                    value={passwordConfirmation}
-                    onChange={(e) => setPasswordConfirmation(e.target.value.replace(" ", ""))}
                 />
 
                 <div>
