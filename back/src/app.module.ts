@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { MailModule } from './mail/mail.module';
 import { DatabaseModule } from './database/database.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { DatabaseModule } from './database/database.module';
     AuthModule,
     AccountsModule,
     MailModule,
-    DatabaseModule
+    DatabaseModule,
+    NotificationsModule
   ],
 })
 export class AppModule {}
