@@ -21,16 +21,18 @@ const tabs: Tab[] = [
 ]
 
 export default function HomePage() {
-  const { token } = useSession();
+  const { token, hydrated } = useSession();
   const router = useRouter();
 
   useEffect(() => {
+    if (!hydrated) return;
+
     if (token.length === 0) {
       router.push("/login");
     }
-  }, [token, router]);
+  }, [token, hydrated, router]);
 
-  if (token.length === 0) return null;
+  if (token.length === 0 || !hydrated) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">

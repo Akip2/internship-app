@@ -1,19 +1,18 @@
 import { useSession } from "@/providers/session-provider";
 import { Button } from "../ui/button";
+import Image from "next/image";
 
 export default function Header(props: { className?: string }) {
     const { className } = props;
 
-    const { logOut } = useSession();
+    const { logOut, role, login } = useSession();
 
     return (
         <header className={`bg-white border-b ${className}`}>
-            <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 border rounded flex items-center justify-center">
-                        Logo
-                    </div>
-                    <span className="font-semibold">Admin</span>
+            <div className="flex items-center justify-between p-4 mx-10">
+                <div className="flex items-center gap-10">
+                    <Image src="/idmc.png" alt="logo" width={200} height={200}/>
+                    <span className="font-semibold">{`${login} `}<span className="font-normal">{`(${role})`}</span></span>
                 </div>
 
                 <div className="flex gap-3">

@@ -9,10 +9,10 @@ export default function LoginForm(props: { className?: string }) {
     const { className } = props;
 
     const router = useRouter();
-    const { setToken, setRole } = useSession();
+    const { setSession } = useSession();
     const { post } = useApi();
 
-    const [login, setLogin] = useState("");
+    const [loginForm, setLoginForm] = useState("");
     const [password, setPassword] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
 
@@ -21,7 +21,7 @@ export default function LoginForm(props: { className?: string }) {
         setErrorMsg("");
 
         const res = await post("auth/login", JSON.stringify({
-            login: login,
+            login: loginForm,
             password: password
         }));
 
@@ -29,9 +29,14 @@ export default function LoginForm(props: { className?: string }) {
 
         const resJson = await res.json();
 
+        console.log(resJson);
+
         if (res.ok) {
-            setToken(resJson.token);
-            setRole(resJson.userRol);
+            setSession({
+                token: resJson.token,
+                login: resJson.user.login,
+                role: resJson.user.role
+            });
             router.push("/");
         } else {
             setErrorMsg(resJson.message);
@@ -44,8 +49,8 @@ export default function LoginForm(props: { className?: string }) {
                 label="Login"
                 type="text"
                 required={true}
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
+                value={loginForm}
+                onChange={(e) => setLoginForm(e.target.value)}
             />
 
             <InputDiv
