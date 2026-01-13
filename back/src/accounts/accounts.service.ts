@@ -3,13 +3,14 @@ import { DatabaseService } from '../database/database.service';
 import { MailService } from '../mail/mail.service';
 import { CreateAccountDto } from './dto';
 import * as bcrypt from 'bcrypt';
+import { nanoid } from 'nanoid';
 
 @Injectable()
 export class AccountsService {
   constructor(
     private db: DatabaseService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   // Récupérer tous les secrétaires
   async getSecretaires(userRole: string) {
@@ -65,7 +66,8 @@ export class AccountsService {
         throw new ConflictException('Email déjà utilisé');
       }
 
-      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      const password = nanoid(12);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       await client.query(
         'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
@@ -84,11 +86,10 @@ export class AccountsService {
         [idUtilisateur, dto.lastName, dto.firstName]
       );
 
-      return { login, idUtilisateur };
+      return { login, password, idUtilisateur };
     }).then(async (result) => {
       try {
-        await this.mailService.sendAccountCredentials(dto, result.lo
-        );
+        await this.mailService.sendAccountCredentials(dto, result.password, result.login);
       } catch (error) {
         console.error('Erreur envoi email:', error);
       }
@@ -97,6 +98,205 @@ export class AccountsService {
         message: 'Secrétaire créé avec succès',
         login: result.login,
       };
+    });
+  }
+
+
+  async changePassword(role: string, userId: number, newPassword: string) {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const result = await this.db.query(
+      role,
+      `
+    SELECT login
+    FROM Utilisateur
+    WHERE id_utilisateur = $1
+    `,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Utilisateur introuvable');
+    }
+
+    const login = result.rows[0].login;
+
+    await this.db.query(
+      role,
+      `
+      UPDATE Compte
+      SET mot_de_passe = $1
+      WHERE login = $2
+      `,
+      [hashedPassword, login]
+    );
+  }
+
+  async getMyProfile(role: string, userId: number) {
+    let roleQuery = '';
+
+    switch (role) {
+      case 'etudiant':
+        roleQuery = `
+        SELECT 
+          u.id_utilisateur,
+          u.mail,
+          u.num_tel,
+          e.nom,
+          e.prenom,
+          e.niveau_etu,
+          e.statut_etu
+        FROM Utilisateur u
+        JOIN Etudiant e ON e.id_utilisateur = u.id_utilisateur
+        WHERE u.id_utilisateur = $1
+      `;
+        break;
+
+      case 'enseignant':
+        roleQuery = `
+        SELECT 
+          u.id_utilisateur,
+          u.mail,
+          u.num_tel,
+          e.nom,
+          e.prenom
+        FROM Utilisateur u
+        JOIN EnseignantResponsable e ON e.id_utilisateur = u.id_utilisateur
+        WHERE u.id_utilisateur = $1
+      `;
+        break;
+
+      case 'secretaire':
+        roleQuery = `
+        SELECT 
+          u.id_utilisateur,
+          u.mail,
+          u.num_tel,
+          s.nom,
+          s.prenom
+        FROM Utilisateur u
+        JOIN Secretaire s ON s.id_utilisateur = u.id_utilisateur
+        WHERE u.id_utilisateur = $1
+      `;
+        break;
+
+      case 'entreprise':
+        roleQuery = `
+        SELECT 
+          u.id_utilisateur,
+          u.mail,
+          u.num_tel,
+          e.raison_sociale,
+          e.domaine_entreprise,
+          e.adresse_entreprise,
+          e.siret_entreprise
+        FROM Utilisateur u
+        JOIN Entreprise e ON e.id_utilisateur = u.id_utilisateur
+        WHERE u.id_utilisateur = $1
+      `;
+        break;
+
+      case 'admin':
+        roleQuery = `
+        SELECT
+          u.id_utilisateur,
+          u.mail,
+          u.num_tel
+        FROM Utilisateur u
+        JOIN Administrateur a ON a.id_utilisateur = u.id_utilisateur
+        WHERE u.id_utilisateur = $1
+      `;
+        break;
+
+      default:
+        throw new Error('Rôle non supporté');
+    }
+
+    const result = await this.db.query(role, roleQuery, [userId]);
+    console.log(result.rows);
+    return {
+      role,
+      ...result.rows[0],
+    };
+  }
+
+  async updateMyProfile(role: string, userId: number, data: any) {
+    return this.db.transaction(role, async (client) => {
+
+      // Infos communes (admin inclus)
+      if (data.num_tel) {
+        await client.query(
+          `
+        UPDATE Utilisateur
+        SET num_tel = $1
+        WHERE id_utilisateur = $2
+        `,
+          [data.num_tel, userId],
+        );
+      }
+
+      switch (role) {
+        case 'etudiant':
+          await client.query(
+            `
+          UPDATE Etudiant
+          SET nom = $1,
+              prenom = $2,
+              statut_etu = $3
+          WHERE id_utilisateur = $4
+          `,
+            [data.nom, data.prenom, data.statut_etu, userId],
+          );
+          break;
+
+        case 'enseignant':
+          await client.query(
+            `
+          UPDATE EnseignantResponsable
+          SET nom = $1,
+              prenom = $2
+          WHERE id_utilisateur = $3
+          `,
+            [data.nom, data.prenom, userId],
+          );
+          break;
+
+        case 'secretaire':
+          await client.query(
+            `
+          UPDATE Secretaire
+          SET nom = $1,
+              prenom = $2
+          WHERE id_utilisateur = $3
+          `,
+            [data.nom, data.prenom, userId],
+          );
+          break;
+
+        case 'entreprise':
+          await client.query(
+            `
+          UPDATE Entreprise
+          SET raison_sociale = $1,
+              domaine_entreprise = $2,
+              adresse_entreprise = $3
+          WHERE id_utilisateur = $4
+          `,
+            [
+              data.raison_sociale,
+              data.domaine_entreprise,
+              data.adresse_entreprise,
+              userId,
+            ],
+          );
+          break;
+
+        case 'admin':
+          // rien d’autre à modifier que Utilisateur
+          break;
+      }
+
+      return { message: 'Profil mis à jour' };
     });
   }
 
@@ -117,7 +317,8 @@ export class AccountsService {
         throw new ConflictException('Email déjà utilisé');
       }
 
-      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      const password = nanoid(12);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       await client.query(
         'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
@@ -135,11 +336,11 @@ export class AccountsService {
         [idUtilisateur, dto.lastName, dto.firstName]
       );
 
-      return { login, idUtilisateur };
+      return { login, password, idUtilisateur };
     }).then(async (result) => {
       try {
         await this.mailService.sendAccountCredentials(
-          dto, result.login
+          dto, result.password, result.login
         );
       } catch (error) {
         console.error('Erreur envoi email:', error);

@@ -1,7 +1,7 @@
 import { IsEmail, IsEmpty, IsInt, IsNotEmpty, IsPhoneNumber, IsString, Length, MinLength } from "class-validator";
 
-const MIN_LOGIN_LENGTH = 3;
-const MIN_PASSWORD_LENGTH = 6;
+export const MIN_LOGIN_LENGTH = 3;
+export const MIN_PASSWORD_LENGTH = 6;
 
 export class LoginDto {
     @IsString()

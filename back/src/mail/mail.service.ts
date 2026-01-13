@@ -6,7 +6,7 @@ import { CreateAccountDto } from '../accounts/dto';
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
-  async sendAccountCredentials(dto: CreateAccountDto, login: string) {
+  async sendAccountCredentials(dto: CreateAccountDto, password: string, login: string) {
     try {
       await this.mailerService.sendMail({
         to: dto.mail,
@@ -20,7 +20,7 @@ export class MailService {
             <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
               <h3 style="margin-top: 0;">Vos identifiants de connexion :</h3>
               <p><strong>Login :</strong> ${login}</p>
-              <p><strong>Mot de passe :</strong> ${dto.password}</p>
+              <p><strong>Mot de passe :</strong> ${password}</p>
             </div>
             
             <p style="color: #666;">
