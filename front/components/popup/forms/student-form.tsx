@@ -16,10 +16,10 @@ type StudentFormData = {
     level: string;
 };
 
-export default function StudentForm(props: { profile?: StudentFormData }) {
-    const { profile } = props;
+export default function StudentForm(props: { profile?: StudentFormData, onStudentCreated: () => void }) {
+    const { profile, onStudentCreated } = props;
 
-    const { post } = useApi();
+    const { post, put } = useApi();
     const { closePopup } = usePopup();
 
     const [form, setForm] = useState(profile ? profile : {
@@ -40,16 +40,21 @@ export default function StudentForm(props: { profile?: StudentFormData }) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        console.log(form);
-
-        const res = await post("accounts/etudiant", JSON.stringify(form));
+        let res; 
+        
+        if (profile) { // modif
+            res = await put("accounts/etudiant", form);
+        } else { // creation
+            res = await post("accounts/etudiant", JSON.stringify(form));
+        }
         const resJson = await res.json();
 
         if (res.ok) {
             closePopup();
-            alert("Le compte a été créé avec succès");
+            alert("Le compte a été créé/modifié avec succès");
+            onStudentCreated();
         } else {
-            alert("Erreur lors de la création: " + resJson.message);
+            alert("Erreur lors de la création/modification: " + resJson.message);
         }
     };
 
@@ -111,7 +116,7 @@ export default function StudentForm(props: { profile?: StudentFormData }) {
                 <label className="text-sm font-medium">
                     Niveau d’étude *
                 </label>
-                <AcademicLevelBox onValueChange={(value) =>
+                <AcademicLevelBox value={form.level} onValueChange={(value) =>
                     setForm((prev) => ({ ...prev, level: value }))
                 }/>
             </div>

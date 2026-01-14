@@ -1,14 +1,23 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from "@/components/ui/select";
 
-export default function AcademicLevelBox(props: { className?: string, onValueChange: (level: string) => void }) {
-    const { className, onValueChange } = props;
+export default function AcademicLevelBox(props: {
+    value?: string;
+    onValueChange: (level: string) => void;
+}) {
+    const { value, onValueChange } = props;
+
     return (
-        <Select
-            onValueChange={onValueChange}
-        >
+        <Select value={value} onValueChange={onValueChange}>
             <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un niveau" />
             </SelectTrigger>
+
             <SelectContent>
                 <SelectItem value="L1">L1</SelectItem>
                 <SelectItem value="L2">L2</SelectItem>
@@ -21,5 +30,5 @@ export default function AcademicLevelBox(props: { className?: string, onValueCha
                 <SelectItem value="M2T">M2 TAL</SelectItem>
             </SelectContent>
         </Select>
-    )
+    );
 }

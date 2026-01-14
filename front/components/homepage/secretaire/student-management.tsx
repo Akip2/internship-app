@@ -8,7 +8,7 @@ import StudentForm from "@/components/popup/forms/student-form";
 
 export default function StudentManagement(props: { className?: string }) {
     const { className } = props;
-    const { get, post } = useApi();
+    const { get } = useApi();
     const {openPopup} = usePopup();
 
     const [students, setStudents] = useState<StudentAccount[]>([]);
@@ -30,12 +30,12 @@ export default function StudentManagement(props: { className?: string }) {
         <section className={`space-y-8 ${className ?? ""}`}>
             <div className="div-group">
                 <h2 className="text-2xl font-semibold">Liste des étudiants de l'année en cours</h2>
-                <Button onClick={() => {openPopup(<StudentForm/>)}}>+ Créer un compte étudiant</Button>
+                <Button onClick={() => {openPopup(<StudentForm onStudentCreated={fetchStudents}/>)}}>+ Créer un compte étudiant</Button>
             </div>
 
             {students.length === 0 ? (
                 <p>Aucun étudiant enregistré.</p>
-            ) : <StudentContainer students={students} />}
+            ) : <StudentContainer students={students} onStudentCreated={fetchStudents}/>}
         </section>
     );
 }
