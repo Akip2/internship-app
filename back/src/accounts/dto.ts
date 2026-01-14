@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEmpty, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { MIN_PASSWORD_LENGTH } from 'src/auth/dto';
 
 export class CreateAccountDto {
@@ -23,4 +23,14 @@ export class PasswordChangeDto {
   @IsNotEmpty()
   @MinLength(MIN_PASSWORD_LENGTH)
   newPassword: string;
+}
+
+export class CreateStudentDto extends CreateAccountDto {
+  @IsString()
+  @IsNotEmpty()
+  level: string;
+
+  @IsString()
+  @IsNotEmpty()
+  birthDate: string;
 }
