@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import InputDiv from "../shared/input-div";
+import InputDiv from "../../shared/input-div";
 import { useApi } from "@/lib/fetcher";
 
 export default function PasswordForm() {

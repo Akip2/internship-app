@@ -1,4 +1,4 @@
-import StaffForm from "@/components/popup/staff-form";
+import StaffForm from "@/components/popup/forms/staff-form";
 import { Card } from "@/components/ui/card";
 import { StaffType } from "@/enums/staff-type";
 import { UserAccount } from "@/lib/types";

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/lib/fetcher";
-import InputDiv from "../shared/input-div";
+import InputDiv from "../../shared/input-div";
 import { useSession } from "@/providers/session-provider";
 import { usePopup } from "@/providers/popup-provider";
 import PasswordForm from "./password-form";
@@ -49,7 +49,7 @@ export default function ProfileForm() {
 
     return (
         <form className="min-w-lg space-y-8" onSubmit={save}>
-            <h1 className="text-xl font-semibold">Mon profil</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Mon profil</h1>
 
             <InputDiv
                 label="Email"

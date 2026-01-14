@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePopup } from "@/providers/popup-provider";
 import NotificationContainer from "../popup/notification-container";
-import ProfileForm from "../popup/profile-info";
+import ProfileForm from "../popup/forms/profile-info";
 
 export default function Header(props: { className?: string }) {
     const { className } = props;

@@ -1,7 +1,7 @@
 import { StaffType } from "@/enums/staff-type";
 import { useState } from "react";
-import InputDiv from "../shared/input-div";
-import { Button } from "../ui/button";
+import InputDiv from "../../shared/input-div";
+import { Button } from "../../ui/button";
 import { useApi } from "@/lib/fetcher";
 import { usePopup } from "@/providers/popup-provider";
 
@@ -36,7 +36,7 @@ export default function StaffForm(props: { className?: string, type: StaffType, 
 
                 onAccountAdded();
             } else {
-                alert("Erreur lors de la création");
+                alert("Erreur lors de la création: "+ (await res.json()).message);
             }
         } catch {
             alert("Erreur réseau");
