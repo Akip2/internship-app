@@ -14,10 +14,16 @@ export default function ProfileForm() {
     const { openPopup } = usePopup();
     const [profile, setProfile] = useState<any | null>(null);
 
+    function toInputDate(value?: string | null) {
+        if (!value) return "";
+        return value.split("T")[0];
+    }
+
     useEffect(() => {
         (async () => {
             const res = await get("accounts/me");
             const data = await res.json();
+            console.log(data);
             setProfile(data);
         })();
     }, []);
@@ -49,7 +55,7 @@ export default function ProfileForm() {
 
     return (
         <form className="min-w-lg space-y-8" onSubmit={save}>
-            <h1 className="text-3xl font-bold text-gray-900">Mon profil</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Profil</h1>
 
             <InputDiv
                 label="Email"
@@ -141,14 +147,25 @@ export default function ProfileForm() {
                     />
 
                     {role === "etudiant" && (
-                        <InputDiv
-                            label="Niveau"
-                            name="niveau_etu"
-                            type="text"
-                            required
-                            value={profile.niveau_etu ?? ""}
-                            disabled
-                        />
+                        <>
+                            <InputDiv
+                                label="Date de naissance"
+                                name="date_naissance_etu"
+                                type="date"
+                                required
+                                value={toInputDate(profile.date_naissance_etu)}
+                                onChange={handleChange}
+                            />
+
+                            <InputDiv
+                                label="Niveau"
+                                name="niveau_etu"
+                                type="text"
+                                required
+                                value={toInputDate(profile.niveau_etu)}
+                                disabled
+                            />
+                        </>
                     )}
                 </>
             )}
