@@ -145,7 +145,8 @@ export class AccountsService {
           e.nom,
           e.prenom,
           e.niveau_etu,
-          e.statut_etu
+          e.statut_etu,
+          e.date_naissance_etu::text
         FROM Utilisateur u
         JOIN Etudiant e ON e.id_utilisateur = u.id_utilisateur
         WHERE u.id_utilisateur = $1
@@ -242,10 +243,11 @@ export class AccountsService {
           UPDATE Etudiant
           SET nom = $1,
               prenom = $2,
-              statut_etu = $3
-          WHERE id_utilisateur = $4
+              statut_etu = $3,
+              date_naissance_etu = $4
+          WHERE id_utilisateur = $5
           `,
-            [data.nom, data.prenom, data.statut_etu, userId],
+            [data.nom, data.prenom, data.statut_etu, data.date_naissance_etu, userId],
           );
           break;
 
