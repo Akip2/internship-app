@@ -5,23 +5,10 @@ import { useRouter } from "next/navigation";
 import { useSession } from "@/providers/session-provider";
 import Header from "@/components/homepage/header";
 import ContentTabs from "@/components/homepage/content-tabs";
-import { Tab } from "@/lib/types";
-import AccountManagement from "@/components/homepage/admin/account-management";
-
-const tabs: Tab[] = [
-  {
-    label: "Gestion des comptes",
-    content: <AccountManagement/>
-  },
-
-  {
-    label: "Archives",
-    content: null
-  }
-]
+import getTabs from "@/lib/tab-map";
 
 export default function HomePage() {
-  const { token, hydrated } = useSession();
+  const { token, role, hydrated } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -29,7 +16,7 @@ export default function HomePage() {
 
     if (token.length === 0) {
       router.push("/login");
-    }
+    } 
   }, [token, hydrated, router]);
 
   if (token.length === 0 || !hydrated) return null;
@@ -38,7 +25,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <ContentTabs tabs={tabs} />
+      <ContentTabs tabs={getTabs(role)} />
     </div>
   );
 }
