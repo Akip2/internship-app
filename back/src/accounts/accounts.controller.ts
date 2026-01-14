@@ -8,6 +8,13 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 export class AccountsController {
     constructor(private readonly accountsService: AccountsService) { }
 
+    @Put('etudiant')
+    async updateEtudiant(@Request() req, @Body() body: any) {
+        console.log(body);
+        console.log(req.user);
+        return await this.accountsService.updateStudentBySecretaire(req.user, body);
+    }
+
     @Get('me')
     async getMyProfile(@Request() req) {
         return this.accountsService.getMyProfile(req.user); // req.user = User

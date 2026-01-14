@@ -12,9 +12,44 @@ export class AccountsService {
   constructor(
     private readonly db: DatabaseService,
     private readonly mailService: MailService,
-  ) {}
+  ) { }
 
   // --------------------- UTILISATEURS ---------------------
+
+  async updateStudentBySecretaire(secretaire: User, data: any) {
+    const client = await this.db.getClientWithUserId(secretaire.role, secretaire.id);
+    try {
+      await client.query('BEGIN');
+
+      // Mise à jour Utilisateur
+      await client.query(
+        `UPDATE Utilisateur
+       SET mail = $1,
+           num_tel = $2
+       WHERE id_utilisateur = $3`,
+        [data.mail, data.phone, data.id_utilisateur]
+      );
+
+      // Mise à jour Etudiant
+      await client.query(
+        `UPDATE Etudiant
+       SET nom = $1,
+           prenom = $2,
+           date_naissance_etu = $3,
+           niveau_etu = $4
+       WHERE id_utilisateur = $5`,
+        [data.lastName, data.firstName, data.birthDate, data.level, data.id_utilisateur]
+      );
+
+      await client.query('COMMIT');
+      return { message: 'Étudiant mis à jour avec succès' };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
 
   async getMyProfile(user: User) {
     const client = await this.db.getClientWithUserId(user.role, user.id);
@@ -185,7 +220,7 @@ export class AccountsService {
     const client = await this.db.getClientWithUserId(user.role, user.id);
     try {
       const res = await client.query(`
-        SELECT e.id_utilisateur, e.nom, e.prenom, e.niveau_etu, e.statut_etu,
+        SELECT e.id_utilisateur, e.nom, e.prenom, e.niveau_etu, e.statut_etu, e.date_naissance_etu::text,
                u.mail, u.num_tel, u.login
         FROM Etudiant e
         JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
