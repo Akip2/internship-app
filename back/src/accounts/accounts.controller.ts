@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
-import { CreateAccountDto, PasswordChangeDto } from './dto';
+import { CreateAccountDto, CreateStudentDto, PasswordChangeDto } from './dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller("accounts")
@@ -51,5 +51,15 @@ export class AccountsController {
     @Post("enseignant")
     async createEnseignant(@Request() req, @Body() dto: CreateAccountDto) {
         return await this.accountsService.createEnseignant(req.user.role, dto);
+    }
+
+    @Get("etudiant")
+    async getEtudiants(@Request() req) {
+        return await this.accountsService.getEtudiants(req.user.role);
+    }
+
+    @Post("etudiant")
+    async createEtudiant(@Request() req, @Body() dto: CreateStudentDto) {
+        return await this.accountsService.createEtudiant(req.user.role, dto);
     }
 }

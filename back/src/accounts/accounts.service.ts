@@ -1,7 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { MailService } from '../mail/mail.service';
-import { CreateAccountDto } from './dto';
+import { CreateAccountDto, CreateStudentDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
 
@@ -348,6 +348,73 @@ export class AccountsService {
 
       return {
         message: 'Enseignant créé avec succès',
+        login: result.login,
+      };
+    });
+  }
+
+  async getEtudiants(userRole: string) {
+    const result = await this.db.query(
+      userRole,
+      `SELECT 
+        e.id_utilisateur,
+        e.nom,
+        e.prenom,
+        e.niveau_etu,
+        e.statut_etu,
+        u.mail,
+        u.num_tel,
+        u.login
+      FROM Etudiant e
+      JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
+      ORDER BY e.nom, e.prenom`
+    );
+    return result.rows;
+  }
+
+  async createEtudiant(userRole: string, dto: CreateStudentDto) {
+    return await this.db.transaction(userRole, async (client) => {
+      const loginResult = await client.query(
+        'SELECT generate_login($1) as login',
+        [dto.lastName]
+      );
+      const login = loginResult.rows[0].login;
+      const checkMail = await client.query(
+        'SELECT 1 FROM Utilisateur WHERE mail = $1',
+        [dto.mail]
+      );
+
+      if (checkMail.rows.length > 0) {
+        throw new ConflictException('Email déjà utilisé');
+      }
+
+      const password = nanoid(12);
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await client.query(
+        'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
+        [login, hashedPassword]
+      );
+      const userResult = await client.query(
+        'INSERT INTO Utilisateur (mail, num_tel, login) VALUES ($1, $2, $3) RETURNING id_utilisateur',
+        [dto.mail, dto.phone, login]
+      );
+      const idUtilisateur = userResult.rows[0].id_utilisateur;
+      await client.query(
+        'INSERT INTO Etudiant (id_utilisateur, nom, prenom, date_naissance_etu, niveau_etu) VALUES ($1, $2, $3, $4, $5)',
+        [idUtilisateur, dto.lastName, dto.firstName, dto.birthDate, dto.level]
+      );
+
+      return { login, password, idUtilisateur };
+    }).then(async (result) => {
+      try {
+        await this.mailService.sendAccountCredentials(
+          dto, result.password, result.login
+        );
+      } catch (error) {
+        console.error('Erreur envoi email:', error);
+      }
+      return {
+        message: 'Étudiant créé avec succès',
         login: result.login,
       };
     });
