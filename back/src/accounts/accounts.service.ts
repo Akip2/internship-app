@@ -1,424 +1,331 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { MailService } from '../mail/mail.service';
-import { CreateAccountDto, CreateStudentDto } from './dto';
+import { CreateAccountDto, CreateStudentDto, PasswordChangeDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
+
+export type User = { role: string; id: number };
 
 @Injectable()
 export class AccountsService {
   constructor(
-    private db: DatabaseService,
-    private mailService: MailService,
-  ) { }
+    private readonly db: DatabaseService,
+    private readonly mailService: MailService,
+  ) {}
 
-  // Récupérer tous les secrétaires
-  async getSecretaires(userRole: string) {
-    // Utilise la connexion correspondant au rôle de l'utilisateur connecté
-    const result = await this.db.query(
-      userRole, // Le rôle vient du JWT !
-      `SELECT 
-        s.id_utilisateur,
-        s.nom,
-        s.prenom,
-        u.mail,
-        u.num_tel,
-        u.login
-      FROM Secretaire s
-      JOIN Utilisateur u ON s.id_utilisateur = u.id_utilisateur
-      ORDER BY s.nom, s.prenom`
-    );
-    return result.rows;
-  }
+  // --------------------- UTILISATEURS ---------------------
 
-  // Récupérer tous les enseignants
-  async getEnseignants(userRole: string) {
-    const result = await this.db.query(
-      userRole,
-      `SELECT 
-        e.id_utilisateur,
-        e.nom,
-        e.prenom,
-        u.mail,
-        u.num_tel,
-        u.login
-      FROM EnseignantResponsable e
-      JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
-      ORDER BY e.nom, e.prenom`
-    );
-    return result.rows;
-  }
-
-  // Créer un secrétaire
-  async createSecretaire(userRole: string, dto: CreateAccountDto) {
-    return await this.db.transaction(userRole, async (client) => {
-      const loginResult = await client.query(
-        'SELECT generate_login($1) as login',
-        [dto.lastName]
-      );
-      const login = loginResult.rows[0].login;
-
-      const checkMail = await client.query(
-        'SELECT 1 FROM Utilisateur WHERE mail = $1',
-        [dto.mail]
-      );
-      if (checkMail.rows.length > 0) {
-        throw new ConflictException('Email déjà utilisé');
+  async getMyProfile(user: User) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      let query = '';
+      switch (user.role) {
+        case 'etudiant':
+          query = `
+            SELECT u.id_utilisateur, u.mail, u.num_tel, e.nom, e.prenom,
+                   e.niveau_etu, e.statut_etu, e.date_naissance_etu::text
+            FROM Utilisateur u
+            JOIN Etudiant e ON e.id_utilisateur = u.id_utilisateur
+            WHERE u.id_utilisateur = $1
+          `;
+          break;
+        case 'enseignant':
+          query = `
+            SELECT u.id_utilisateur, u.mail, u.num_tel, e.nom, e.prenom
+            FROM Utilisateur u
+            JOIN EnseignantResponsable e ON e.id_utilisateur = u.id_utilisateur
+            WHERE u.id_utilisateur = $1
+          `;
+          break;
+        case 'secretaire':
+          query = `
+            SELECT u.id_utilisateur, u.mail, u.num_tel, s.nom, s.prenom
+            FROM Utilisateur u
+            JOIN Secretaire s ON s.id_utilisateur = u.id_utilisateur
+            WHERE u.id_utilisateur = $1
+          `;
+          break;
+        case 'entreprise':
+          query = `
+            SELECT u.id_utilisateur, u.mail, u.num_tel, e.raison_sociale,
+                   e.domaine_entreprise, e.adresse_entreprise, e.siret_entreprise
+            FROM Utilisateur u
+            JOIN Entreprise e ON e.id_utilisateur = u.id_utilisateur
+            WHERE u.id_utilisateur = $1
+          `;
+          break;
+        case 'admin':
+          query = `
+            SELECT u.id_utilisateur, u.mail, u.num_tel
+            FROM Utilisateur u
+            JOIN Administrateur a ON a.id_utilisateur = u.id_utilisateur
+            WHERE u.id_utilisateur = $1
+          `;
+          break;
+        default:
+          throw new Error('Rôle non supporté');
       }
-
-      const password = nanoid(12);
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      await client.query(
-        'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
-        [login, hashedPassword]
-      );
-
-      const userResult = await client.query(
-        'INSERT INTO Utilisateur (mail, num_tel, login) VALUES ($1, $2, $3) RETURNING id_utilisateur',
-        [dto.mail, dto.phone, login]
-      );
-      const idUtilisateur = userResult.rows[0].id_utilisateur;
-
-      // Crée le secrétaire
-      await client.query(
-        'INSERT INTO Secretaire (id_utilisateur, nom, prenom) VALUES ($1, $2, $3)',
-        [idUtilisateur, dto.lastName, dto.firstName]
-      );
-
-      return { login, password, idUtilisateur };
-    }).then(async (result) => {
-      try {
-        await this.mailService.sendAccountCredentials(dto, result.password, result.login);
-      } catch (error) {
-        console.error('Erreur envoi email:', error);
-      }
-
-      return {
-        message: 'Secrétaire créé avec succès',
-        login: result.login,
-      };
-    });
-  }
-
-
-  async changePassword(role: string, userId: number, newPassword: string) {
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    const result = await this.db.query(
-      role,
-      `
-    SELECT login
-    FROM Utilisateur
-    WHERE id_utilisateur = $1
-    `,
-      [userId]
-    );
-
-    if (result.rows.length === 0) {
-      throw new Error('Utilisateur introuvable');
+      const res = await client.query(query, [user.id]);
+      return { role: user.role, ...res.rows[0] };
+    } finally {
+      client.release();
     }
-
-    const login = result.rows[0].login;
-
-    await this.db.query(
-      role,
-      `
-      UPDATE Compte
-      SET mot_de_passe = $1
-      WHERE login = $2
-      `,
-      [hashedPassword, login]
-    );
   }
 
-  async getMyProfile(role: string, userId: number) {
-    let roleQuery = '';
+  async updateMyProfile(user: User, data: any) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      await client.query('BEGIN');
 
-    switch (role) {
-      case 'etudiant':
-        roleQuery = `
-        SELECT 
-          u.id_utilisateur,
-          u.mail,
-          u.num_tel,
-          e.nom,
-          e.prenom,
-          e.niveau_etu,
-          e.statut_etu,
-          e.date_naissance_etu::text
-        FROM Utilisateur u
-        JOIN Etudiant e ON e.id_utilisateur = u.id_utilisateur
-        WHERE u.id_utilisateur = $1
-      `;
-        break;
-
-      case 'enseignant':
-        roleQuery = `
-        SELECT 
-          u.id_utilisateur,
-          u.mail,
-          u.num_tel,
-          e.nom,
-          e.prenom
-        FROM Utilisateur u
-        JOIN EnseignantResponsable e ON e.id_utilisateur = u.id_utilisateur
-        WHERE u.id_utilisateur = $1
-      `;
-        break;
-
-      case 'secretaire':
-        roleQuery = `
-        SELECT 
-          u.id_utilisateur,
-          u.mail,
-          u.num_tel,
-          s.nom,
-          s.prenom
-        FROM Utilisateur u
-        JOIN Secretaire s ON s.id_utilisateur = u.id_utilisateur
-        WHERE u.id_utilisateur = $1
-      `;
-        break;
-
-      case 'entreprise':
-        roleQuery = `
-        SELECT 
-          u.id_utilisateur,
-          u.mail,
-          u.num_tel,
-          e.raison_sociale,
-          e.domaine_entreprise,
-          e.adresse_entreprise,
-          e.siret_entreprise
-        FROM Utilisateur u
-        JOIN Entreprise e ON e.id_utilisateur = u.id_utilisateur
-        WHERE u.id_utilisateur = $1
-      `;
-        break;
-
-      case 'admin':
-        roleQuery = `
-        SELECT
-          u.id_utilisateur,
-          u.mail,
-          u.num_tel
-        FROM Utilisateur u
-        JOIN Administrateur a ON a.id_utilisateur = u.id_utilisateur
-        WHERE u.id_utilisateur = $1
-      `;
-        break;
-
-      default:
-        throw new Error('Rôle non supporté');
-    }
-
-    const result = await this.db.query(role, roleQuery, [userId]);
-    console.log(result.rows);
-    return {
-      role,
-      ...result.rows[0],
-    };
-  }
-
-  async updateMyProfile(role: string, userId: number, data: any) {
-    return this.db.transaction(role, async (client) => {
-
-      // Infos communes (admin inclus)
       if (data.num_tel) {
         await client.query(
-          `
-        UPDATE Utilisateur
-        SET num_tel = $1
-        WHERE id_utilisateur = $2
-        `,
-          [data.num_tel, userId],
+          `UPDATE Utilisateur SET num_tel = $1 WHERE id_utilisateur = $2`,
+          [data.num_tel, user.id]
         );
       }
 
-      switch (role) {
+      switch (user.role) {
         case 'etudiant':
           await client.query(
-            `
-          UPDATE Etudiant
-          SET nom = $1,
-              prenom = $2,
-              statut_etu = $3,
-              date_naissance_etu = $4
-          WHERE id_utilisateur = $5
-          `,
-            [data.nom, data.prenom, data.statut_etu, data.date_naissance_etu, userId],
+            `UPDATE Etudiant
+             SET nom = $1, prenom = $2, statut_etu = $3, date_naissance_etu = $4
+             WHERE id_utilisateur = $5`,
+            [data.nom, data.prenom, data.statut_etu, data.date_naissance_etu, user.id]
           );
           break;
-
         case 'enseignant':
           await client.query(
-            `
-          UPDATE EnseignantResponsable
-          SET nom = $1,
-              prenom = $2
-          WHERE id_utilisateur = $3
-          `,
-            [data.nom, data.prenom, userId],
+            `UPDATE EnseignantResponsable SET nom = $1, prenom = $2 WHERE id_utilisateur = $3`,
+            [data.nom, data.prenom, user.id]
           );
           break;
-
         case 'secretaire':
           await client.query(
-            `
-          UPDATE Secretaire
-          SET nom = $1,
-              prenom = $2
-          WHERE id_utilisateur = $3
-          `,
-            [data.nom, data.prenom, userId],
+            `UPDATE Secretaire SET nom = $1, prenom = $2 WHERE id_utilisateur = $3`,
+            [data.nom, data.prenom, user.id]
           );
           break;
-
         case 'entreprise':
           await client.query(
-            `
-          UPDATE Entreprise
-          SET raison_sociale = $1,
-              domaine_entreprise = $2,
-              adresse_entreprise = $3
-          WHERE id_utilisateur = $4
-          `,
-            [
-              data.raison_sociale,
-              data.domaine_entreprise,
-              data.adresse_entreprise,
-              userId,
-            ],
+            `UPDATE Entreprise
+             SET raison_sociale = $1, domaine_entreprise = $2, adresse_entreprise = $3
+             WHERE id_utilisateur = $4`,
+            [data.raison_sociale, data.domaine_entreprise, data.adresse_entreprise, user.id]
           );
           break;
-
         case 'admin':
-          // rien d’autre à modifier que Utilisateur
+          // rien à faire pour l’instant
           break;
       }
 
+      await client.query('COMMIT');
       return { message: 'Profil mis à jour' };
-    });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 
-  // Créer un enseignant
-  async createEnseignant(userRole: string, dto: CreateAccountDto) {
-    return await this.db.transaction(userRole, async (client) => {
-      const loginResult = await client.query(
-        'SELECT generate_login($1) as login',
-        [dto.lastName]
-      );
-      const login = loginResult.rows[0].login;
+  async changePassword(user: User, newPassword: string) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      const checkMail = await client.query(
-        'SELECT 1 FROM Utilisateur WHERE mail = $1',
-        [dto.mail]
+    try {
+      const res = await client.query(
+        `SELECT login FROM Utilisateur WHERE id_utilisateur = $1`,
+        [user.id]
       );
-      if (checkMail.rows.length > 0) {
-        throw new ConflictException('Email déjà utilisé');
-      }
+      if (res.rows.length === 0) throw new Error('Utilisateur introuvable');
+
+      await client.query(
+        `UPDATE Compte SET mot_de_passe = $1 WHERE login = $2`,
+        [hashedPassword, res.rows[0].login]
+      );
+    } finally {
+      client.release();
+    }
+  }
+
+  // --------------------- LISTES ---------------------
+
+  async getSecretaires(user: User) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      const res = await client.query(`
+        SELECT s.id_utilisateur, s.nom, s.prenom, u.mail, u.num_tel, u.login
+        FROM Secretaire s
+        JOIN Utilisateur u ON s.id_utilisateur = u.id_utilisateur
+        ORDER BY s.nom, s.prenom
+      `);
+      return res.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  async getEnseignants(user: User) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      const res = await client.query(`
+        SELECT e.id_utilisateur, e.nom, e.prenom, u.mail, u.num_tel, u.login
+        FROM EnseignantResponsable e
+        JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
+        ORDER BY e.nom, e.prenom
+      `);
+      return res.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  async getEtudiants(user: User) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      const res = await client.query(`
+        SELECT e.id_utilisateur, e.nom, e.prenom, e.niveau_etu, e.statut_etu,
+               u.mail, u.num_tel, u.login
+        FROM Etudiant e
+        JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
+        ORDER BY e.nom, e.prenom
+      `);
+      return res.rows;
+    } finally {
+      client.release();
+    }
+  }
+
+  // --------------------- CREATION ---------------------
+
+  async createSecretaire(user: User, dto: CreateAccountDto) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      await client.query('BEGIN');
+
+      const loginRes = await client.query('SELECT generate_login($1) as login', [dto.lastName]);
+      const login = loginRes.rows[0].login;
+
+      const checkMail = await client.query('SELECT 1 FROM Utilisateur WHERE mail = $1', [dto.mail]);
+      if (checkMail.rows.length > 0) throw new ConflictException('Email déjà utilisé');
 
       const password = nanoid(12);
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      await client.query(
-        'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
-        [login, hashedPassword]
-      );
+      await client.query('INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)', [login, hashedPassword]);
 
-      const userResult = await client.query(
+      const userRes = await client.query(
         'INSERT INTO Utilisateur (mail, num_tel, login) VALUES ($1, $2, $3) RETURNING id_utilisateur',
         [dto.mail, dto.phone, login]
       );
-      const idUtilisateur = userResult.rows[0].id_utilisateur;
+      const idUtilisateur = userRes.rows[0].id_utilisateur;
+
+      await client.query('INSERT INTO Secretaire (id_utilisateur, nom, prenom) VALUES ($1, $2, $3)',
+        [idUtilisateur, dto.lastName, dto.firstName]);
+
+      await client.query('COMMIT');
+
+      try {
+        await this.mailService.sendAccountCredentials(dto, password, login);
+      } catch (e) {
+        console.error('Erreur envoi email:', e);
+      }
+
+      return { message: 'Secrétaire créé avec succès', login };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
+  async createEnseignant(user: User, dto: CreateAccountDto) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      await client.query('BEGIN');
+
+      const loginRes = await client.query('SELECT generate_login($1) as login', [dto.lastName]);
+      const login = loginRes.rows[0].login;
+
+      const checkMail = await client.query('SELECT 1 FROM Utilisateur WHERE mail = $1', [dto.mail]);
+      if (checkMail.rows.length > 0) throw new ConflictException('Email déjà utilisé');
+
+      const password = nanoid(12);
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      await client.query('INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)', [login, hashedPassword]);
+
+      const userRes = await client.query(
+        'INSERT INTO Utilisateur (mail, num_tel, login) VALUES ($1, $2, $3) RETURNING id_utilisateur',
+        [dto.mail, dto.phone, login]
+      );
+      const idUtilisateur = userRes.rows[0].id_utilisateur;
 
       await client.query(
         'INSERT INTO EnseignantResponsable (id_utilisateur, nom, prenom) VALUES ($1, $2, $3)',
         [idUtilisateur, dto.lastName, dto.firstName]
       );
 
-      return { login, password, idUtilisateur };
-    }).then(async (result) => {
+      await client.query('COMMIT');
+
       try {
-        await this.mailService.sendAccountCredentials(
-          dto, result.password, result.login
-        );
-      } catch (error) {
-        console.error('Erreur envoi email:', error);
+        await this.mailService.sendAccountCredentials(dto, password, login);
+      } catch (e) {
+        console.error('Erreur envoi email:', e);
       }
 
-      return {
-        message: 'Enseignant créé avec succès',
-        login: result.login,
-      };
-    });
+      return { message: 'Enseignant créé avec succès', login };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 
-  async getEtudiants(userRole: string) {
-    const result = await this.db.query(
-      userRole,
-      `SELECT 
-        e.id_utilisateur,
-        e.nom,
-        e.prenom,
-        e.niveau_etu,
-        e.statut_etu,
-        u.mail,
-        u.num_tel,
-        u.login
-      FROM Etudiant e
-      JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
-      ORDER BY e.nom, e.prenom`
-    );
-    return result.rows;
-  }
+  async createEtudiant(user: User, dto: CreateStudentDto) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      await client.query('BEGIN');
 
-  async createEtudiant(userRole: string, dto: CreateStudentDto) {
-    return await this.db.transaction(userRole, async (client) => {
-      const loginResult = await client.query(
-        'SELECT generate_login($1) as login',
-        [dto.lastName]
-      );
-      const login = loginResult.rows[0].login;
-      const checkMail = await client.query(
-        'SELECT 1 FROM Utilisateur WHERE mail = $1',
-        [dto.mail]
-      );
+      const loginRes = await client.query('SELECT generate_login($1) as login', [dto.lastName]);
+      const login = loginRes.rows[0].login;
 
-      if (checkMail.rows.length > 0) {
-        throw new ConflictException('Email déjà utilisé');
-      }
+      const checkMail = await client.query('SELECT 1 FROM Utilisateur WHERE mail = $1', [dto.mail]);
+      if (checkMail.rows.length > 0) throw new ConflictException('Email déjà utilisé');
 
       const password = nanoid(12);
       const hashedPassword = await bcrypt.hash(password, 10);
-      await client.query(
-        'INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)',
-        [login, hashedPassword]
-      );
-      const userResult = await client.query(
+
+      await client.query('INSERT INTO Compte (login, mot_de_passe) VALUES ($1, $2)', [login, hashedPassword]);
+
+      const userRes = await client.query(
         'INSERT INTO Utilisateur (mail, num_tel, login) VALUES ($1, $2, $3) RETURNING id_utilisateur',
         [dto.mail, dto.phone, login]
       );
-      const idUtilisateur = userResult.rows[0].id_utilisateur;
+      const idUtilisateur = userRes.rows[0].id_utilisateur;
+
       await client.query(
         'INSERT INTO Etudiant (id_utilisateur, nom, prenom, date_naissance_etu, niveau_etu) VALUES ($1, $2, $3, $4, $5)',
         [idUtilisateur, dto.lastName, dto.firstName, dto.birthDate, dto.level]
       );
 
-      return { login, password, idUtilisateur };
-    }).then(async (result) => {
+      await client.query('COMMIT');
+
       try {
-        await this.mailService.sendAccountCredentials(
-          dto, result.password, result.login
-        );
-      } catch (error) {
-        console.error('Erreur envoi email:', error);
+        await this.mailService.sendAccountCredentials(dto, password, login);
+      } catch (e) {
+        console.error('Erreur envoi email:', e);
       }
-      return {
-        message: 'Étudiant créé avec succès',
-        login: result.login,
-      };
-    });
+
+      return { message: 'Étudiant créé avec succès', login };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 }

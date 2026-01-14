@@ -8,8 +8,8 @@ export class NotificationsService {
   ) {}
 
   async getNotifications(userRole: string, userId: number) {
-    const result = await this.db.query(
-      userRole,
+    const client = await this.db.getClientWithUserId(userRole, userId);
+    const result = await client.query(
       `SELECT id_notification, texte, lue FROM Notification WHERE id_utilisateur=$1 ORDER BY id_notification`,
       [userId]
     );

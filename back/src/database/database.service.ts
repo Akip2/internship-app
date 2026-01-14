@@ -114,4 +114,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
             client.release();
         }
     }
+
+    async getClientWithUserId(role: string, userId: number): Promise<PoolClient> {
+        const client = await this.getPool(role).connect();
+
+        try {
+            await client.query(`SET app.current_user_id = ${Number(userId)}`);
+            return client;
+        } catch (e) {
+            client.release();
+            throw e;
+        }
+    }
 }

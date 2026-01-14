@@ -3,63 +3,53 @@ import { AccountsService } from './accounts.service';
 import { CreateAccountDto, CreateStudentDto, PasswordChangeDto } from './dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@Controller("accounts")
+@Controller('accounts')
 @UseGuards(JwtAuthGuard)
 export class AccountsController {
-    constructor(
-        private readonly accountsService: AccountsService,
-    ) { }
+    constructor(private readonly accountsService: AccountsService) { }
 
     @Get('me')
     async getMyProfile(@Request() req) {
-        return this.accountsService.getMyProfile(
-            req.user.role,
-            req.user.id
-        );
+        return this.accountsService.getMyProfile(req.user); // req.user = User
     }
 
     @Put('me')
     async updateMyProfile(@Request() req, @Body() body) {
-        return this.accountsService.updateMyProfile(
-            req.user.role,
-            req.user.id,
-            body,
-        );
+        return this.accountsService.updateMyProfile(req.user, body);
     }
 
-    @Put("change-password")
+    @Put('change-password')
     async changePassword(@Request() req, @Body() body: PasswordChangeDto) {
-        return await this.accountsService.changePassword(req.user.role, req.user.id, body.newPassword);
+        return this.accountsService.changePassword(req.user, body.newPassword);
     }
 
-    @Get("secretaire")
+    @Get('secretaire')
     async getSecretaires(@Request() req) {
-        // Le rôle vient du JWT décodé par le Guard
-        return await this.accountsService.getSecretaires(req.user.role);
+        return this.accountsService.getSecretaires(req.user);
     }
 
-    @Get("enseignant")
+    @Get('enseignant')
     async getEnseignants(@Request() req) {
-        return await this.accountsService.getEnseignants(req.user.role);
+        return this.accountsService.getEnseignants(req.user);
     }
 
-    @Post("secretaire")
+    @Post('secretaire')
     async createSecretaire(@Request() req, @Body() dto: CreateAccountDto) {
-        return await this.accountsService.createSecretaire(req.user.role, dto);
+        return this.accountsService.createSecretaire(req.user, dto);
     }
 
-    @Post("enseignant")
+    @Post('enseignant')
     async createEnseignant(@Request() req, @Body() dto: CreateAccountDto) {
-        return await this.accountsService.createEnseignant(req.user.role, dto);
+        return this.accountsService.createEnseignant(req.user, dto);
     }
 
-    @Get("etudiant")
+    @Get('etudiant')
     async getEtudiants(@Request() req) {
-        return await this.accountsService.getEtudiants(req.user.role);
+        return this.accountsService.getEtudiants(req.user);
     }
 
-    @Post("etudiant")
+    @Post('etudiant')
     async createEtudiant(@Request() req, @Body() dto: CreateStudentDto) {
-        return await this.accountsService.createEtudiant(req.user.role, dto);
+        return this.accountsService.createEtudiant(req.user, dto);
     }
 }
