@@ -38,7 +38,7 @@ export default function ProfileForm() {
 
     const save = async (e: React.FormEvent) => {
         e.preventDefault();
-
+console.log(profile);
         const res = await put("accounts/me", profile);
         alert(res.ok ? "Profil mis à jour" : "Erreur lors de la mise à jour");
     };
