@@ -20,7 +20,7 @@ export class AttestationsService {
     const client = await this.db.getClientWithUserId(user.role, user.id);
     try {
       const res = await client.query(
-        `SELECT nom, prenom, attestation_chemin
+        `SELECT nom, prenom, attestation_chemin, niveau_etu, id_utilisateur
          FROM Etudiant
          WHERE attestation_rc = 'disponible'`
       );
@@ -32,6 +32,7 @@ export class AttestationsService {
   }
 
   async validateAttestation(user: User, etudiantId: number) {
+    console.log('Validation attestation pour étudiant ID:', etudiantId);
     const client = await this.db.getClientWithUserId(user.role, user.id);
     try {
       await client.query('BEGIN');
@@ -39,7 +40,7 @@ export class AttestationsService {
       await client.query(
         `UPDATE Etudiant
          SET attestation_rc = 'validee'
-         WHERE id = $1`,
+         WHERE id_utilisateur = $1`,
         [etudiantId]
       );
 

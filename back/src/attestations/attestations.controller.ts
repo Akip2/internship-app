@@ -20,7 +20,7 @@ export class AttestationsController {
 
     @Put("/validate")
     async validateAttestation(@Req() req, @Body() body) {
-        return await this.service.validateAttestation(req.user, body.etudiantId);
+        return await this.service.validateAttestation(req.user, body.id_utilisateur);
     }
 
     @Post()

@@ -36,7 +36,7 @@ export class AccountsService {
        SET nom = $1,
            prenom = $2,
            date_naissance_etu = $3,
-           niveau_etu = $4
+           niveau_etu = $4,
        WHERE id_utilisateur = $5`,
         [data.lastName, data.firstName, data.birthDate, data.level, data.id_utilisateur]
       );
@@ -115,8 +115,8 @@ export class AccountsService {
 
       if (data.num_tel) {
         await client.query(
-          `UPDATE Utilisateur SET num_tel = $1 WHERE id_utilisateur = $2`,
-          [data.num_tel, user.id]
+          `UPDATE Utilisateur SET num_tel = $1, mail= $2 WHERE id_utilisateur = $3`,
+          [data.num_tel, data.mail, user.id]
         );
       }
 
