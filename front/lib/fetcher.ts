@@ -6,22 +6,27 @@ const port = process.env.NEXT_PUBLIC_API_PORT ?? "4000";
 export function useApi() {
     const { token } = useSession();
 
-    const headers = {
-        "Content-Type": "application/json",
+    const headers: any = {
         "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
     };
 
     const get = (endpoint: string) => {
+        const headerCopy = { ...headers };
         return fetch(`${host}:${port}/${endpoint}`, {
             method: "GET",
             headers: headers
         });
     }
 
-    const post = (endpoint: string, body: any) => {
+    const post = (endpoint: string, body: any, image: boolean = false) => {
+        const headerCopy = { ...headers };
+        if (image) {
+            delete headerCopy["Content-Type"];
+        }
         return fetch(`${host}:${port}/${endpoint}`, {
             method: "POST",
-            headers: headers,
+            headers: headerCopy,
 
             body: body
         });
