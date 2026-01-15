@@ -7,17 +7,13 @@ import InputDiv from "../../shared/input-div";
 import { useSession } from "@/providers/session-provider";
 import { usePopup } from "@/providers/popup-provider";
 import PasswordForm from "./password-form";
+import { toInputDate } from "@/lib/utils";
 
 export default function ProfileForm() {
     const { put, get } = useApi();
     const { role } = useSession();
     const { openPopup } = usePopup();
     const [profile, setProfile] = useState<any | null>(null);
-
-    function toInputDate(value?: string | null) {
-        if (!value) return "";
-        return value.split("T")[0];
-    }
 
     useEffect(() => {
         (async () => {

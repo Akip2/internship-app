@@ -3,6 +3,7 @@ import { Tab } from "./types";
 import AccountManagement from "@/components/homepage/admin/account-management";
 import AttestationManagement from "@/components/homepage/secretaire/attestation-management";
 import StudentManagement from "@/components/homepage/secretaire/student-management";
+import AttestationDeposit from "@/components/homepage/student/attestation-deposit";
 
 export default function getTabs(role: UserRole): Tab[] {
     switch (role) {
@@ -29,6 +30,18 @@ export default function getTabs(role: UserRole): Tab[] {
                 {
                     label: "Gestion des étudiants",
                     content: <StudentManagement/>
+                }
+            ]
+        case UserRole.ETUDIANT:
+            return [
+                {
+                label: "Mes candidatures",
+                content: null
+                },
+            
+                {
+                    label: "Mon attestation",
+                    content: <AttestationDeposit/>
                 }
             ]
         
