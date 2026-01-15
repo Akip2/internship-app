@@ -4,6 +4,7 @@ import AccountManagement from "@/components/homepage/admin/account-management";
 import AttestationManagement from "@/components/homepage/secretaire/attestation-management";
 import StudentManagement from "@/components/homepage/secretaire/student-management";
 import AttestationDeposit from "@/components/homepage/student/attestation-deposit";
+import MyOffers from "@/components/homepage/enterprise/my-offers";
 
 export default function getTabs(role: UserRole): Tab[] {
     switch (role) {
@@ -42,6 +43,19 @@ export default function getTabs(role: UserRole): Tab[] {
                 {
                     label: "Mon attestation",
                     content: <AttestationDeposit/>
+                }
+            ]
+        
+        case UserRole.ENTREPRISE:
+            return [
+                {
+                    label: "Mes Offres",
+                    content: <MyOffers/>
+                },
+
+                {
+                    label: "Consulter les profils étudiants",
+                    content: null
                 }
             ]
         

@@ -10,6 +10,8 @@ export default function InputDiv(props: {
   required?: boolean;
   value: string;
   disabled?: boolean;
+  min?: string;
+  max?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 }) {
   const {
@@ -39,6 +41,8 @@ export default function InputDiv(props: {
         value={value}
         disabled={disabled}
         readOnly={isReadOnly}
+        min={props.min}
+        max={props.max}
         onChange={onChange}
       />
     </div>
