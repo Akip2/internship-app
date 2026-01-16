@@ -5,16 +5,16 @@ export type User = { role: string; id: number };
 
 @Injectable()
 export class OffersService {
-  constructor(private readonly db: DatabaseService) {}
+    constructor(private readonly db: DatabaseService) { }
 
-  // Récupérer toutes les offres de l'entreprise
-  async getMyOffers(user: User) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    // Récupérer toutes les offres de l'entreprise
+    async getMyOffers(user: User) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
 
-    try {
-      const result = await client.query(
-        `SELECT 
+        try {
+            const result = await client.query(
+                `SELECT 
           o.id_offre,
           o.intitule_offre,
           o.type_contrat,
@@ -32,61 +32,61 @@ export class OffersService {
         WHERE o.id_utilisateur = $1
         GROUP BY o.id_offre
         ORDER BY o.id_offre DESC`,
-        [user.id]
-      );
+                [user.id]
+            );
 
-      return result.rows;
-    } finally {
-      client.release();
+            return result.rows;
+        } finally {
+            client.release();
+        }
     }
-  }
 
-  // Récupérer une offre par ID
-  async getOfferById(user: User, offerId: number) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    // Récupérer une offre par ID
+    async getOfferById(user: User, offerId: number) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
 
-    try {
-      const result = await client.query(
-        `SELECT * FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
-        [offerId, user.id]
-      );
+        try {
+            const result = await client.query(
+                `SELECT * FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
+                [offerId, user.id]
+            );
 
-      if (result.rows.length === 0) {
-        return null;
-      }
+            if (result.rows.length === 0) {
+                return null;
+            }
 
-      return result.rows[0];
-    } finally {
-      client.release();
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
     }
-  }
 
-  // Créer une nouvelle offre
-  async createOffer(user: User, data: any) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    // Créer une nouvelle offre
+    async createOffer(user: User, data: any) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
 
-    try {
-      // Validation et valeurs par défaut
-      let duree_validite = data.duree_validite ? parseInt(data.duree_validite) : 12;
-      
-      // Validation: duree_validite entre 1 et 12
-      if (duree_validite < 1 || duree_validite > 12) {
-        throw new Error('La durée de validité doit être entre 1 et 12 mois');
-      }
+        try {
+            // Validation et valeurs par défaut
+            let duree_validite = data.duree_validite ? parseInt(data.duree_validite) : 12;
 
-      // Calculer duree_contrat à partir des dates
-      let duree_contrat = 0;
-      if (data.date_debut_contrat && data.date_fin_contrat) {
-        const dateDebut = new Date(data.date_debut_contrat);
-        const dateFin = new Date(data.date_fin_contrat);
-        const diffTime = Math.abs(dateFin.getTime() - dateDebut.getTime());
-        duree_contrat = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      }
+            // Validation: duree_validite entre 1 et 12
+            if (duree_validite < 1 || duree_validite > 12) {
+                throw new Error('La durée de validité doit être entre 1 et 12 mois');
+            }
 
-      const result = await client.query(
-        `INSERT INTO offre (
+            // Calculer duree_contrat à partir des dates
+            let duree_contrat = 0;
+            if (data.date_debut_contrat && data.date_fin_contrat) {
+                const dateDebut = new Date(data.date_debut_contrat);
+                const dateFin = new Date(data.date_fin_contrat);
+                const diffTime = Math.abs(dateFin.getTime() - dateDebut.getTime());
+                duree_contrat = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+
+            const result = await client.query(
+                `INSERT INTO offre (
           intitule_offre,
           duree_validite,
           type_contrat,
@@ -100,61 +100,61 @@ export class OffersService {
           id_utilisateur
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING *`,
-        [
-          data.intitule_offre,
-          duree_validite,
-          data.type_contrat,
-          duree_contrat,
-          data.date_debut_contrat || null,
-          data.date_fin_contrat || null,
-          data.adresse_offre,
-          data.remuneration_offre || null,
-          data.pays,
-          'deposee', // État initial
-          user.id,
-        ]
-      );
+                [
+                    data.intitule_offre,
+                    duree_validite,
+                    data.type_contrat,
+                    duree_contrat,
+                    data.date_debut_contrat || null,
+                    data.date_fin_contrat || null,
+                    data.adresse_offre,
+                    data.remuneration_offre || null,
+                    data.pays,
+                    'deposee', // État initial
+                    user.id,
+                ]
+            );
 
-      return result.rows[0];
-    } finally {
-      client.release();
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
     }
-  }
 
-  // Mettre à jour une offre
-  async updateOffer(user: User, offerId: number, data: any) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    // Mettre à jour une offre
+    async updateOffer(user: User, offerId: number, data: any) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
 
-    try {
-      // Vérifier que l'offre appartient à l'utilisateur
-      const check = await client.query(
-        `SELECT id_offre FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
-        [offerId, user.id]
-      );
+        try {
+            // Vérifier que l'offre appartient à l'utilisateur
+            const check = await client.query(
+                `SELECT id_offre FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
+                [offerId, user.id]
+            );
 
-      if (check.rows.length === 0) {
-        return null;
-      }
+            if (check.rows.length === 0) {
+                return null;
+            }
 
-      // Validation et valeurs par défaut pour duree_validite
-      let duree_validite = data.duree_validite !== undefined ? parseInt(data.duree_validite) : null;
-      
-      if (duree_validite !== null && (duree_validite < 1 || duree_validite > 12)) {
-        throw new Error('La durée de validité doit être entre 1 et 12 mois');
-      }
+            // Validation et valeurs par défaut pour duree_validite
+            let duree_validite = data.duree_validite !== undefined ? parseInt(data.duree_validite) : null;
 
-      // Calculer duree_contrat à partir des dates si elles sont fournies
-      let duree_contrat = 0;
-      if (data.date_debut_contrat && data.date_fin_contrat) {
-        const dateDebut = new Date(data.date_debut_contrat);
-        const dateFin = new Date(data.date_fin_contrat);
-        const diffTime = Math.abs(dateFin.getTime() - dateDebut.getTime());
-        duree_contrat = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      }
+            if (duree_validite !== null && (duree_validite < 1 || duree_validite > 12)) {
+                throw new Error('La durée de validité doit être entre 1 et 12 mois');
+            }
 
-      const result = await client.query(
-        `UPDATE offre SET
+            // Calculer duree_contrat à partir des dates si elles sont fournies
+            let duree_contrat = 0;
+            if (data.date_debut_contrat && data.date_fin_contrat) {
+                const dateDebut = new Date(data.date_debut_contrat);
+                const dateFin = new Date(data.date_fin_contrat);
+                const diffTime = Math.abs(dateFin.getTime() - dateDebut.getTime());
+                duree_contrat = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+
+            const result = await client.query(
+                `UPDATE offre SET
           intitule_offre = COALESCE($1, intitule_offre),
           duree_validite = COALESCE($2, duree_validite),
           type_contrat = COALESCE($3, type_contrat),
@@ -164,87 +164,155 @@ export class OffersService {
           adresse_offre = COALESCE($7, adresse_offre),
           remuneration_offre = COALESCE($8, remuneration_offre),
           pays = COALESCE($9, pays),
-          etat_offre = COALESCE($10, etat_offre)
+          etat_offre = 'en_modification'
         WHERE id_offre = $11 AND id_utilisateur = $12
         RETURNING *`,
-        [
-          data.intitule_offre || null,
-          duree_validite,
-          data.type_contrat || null,
-          duree_contrat,
-          data.date_debut_contrat || null,
-          data.date_fin_contrat || null,
-          data.adresse_offre || null,
-          data.remuneration_offre || null,
-          data.pays || null,
-          data.etat_offre || null,
-          offerId,
-          user.id,
-        ]
-      );
+                [
+                    data.intitule_offre || null,
+                    duree_validite,
+                    data.type_contrat || null,
+                    duree_contrat,
+                    data.date_debut_contrat || null,
+                    data.date_fin_contrat || null,
+                    data.adresse_offre || null,
+                    data.remuneration_offre || null,
+                    data.pays || null,
+                    data.etat_offre || null,
+                    offerId,
+                    user.id,
+                ]
+            );
 
-      return result.rows[0];
-    } finally {
-      client.release();
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
     }
-  }
 
-  // Supprimer une offre
-  async deleteOffer(user: User, offerId: number) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    // Supprimer une offre
+    async deleteOffer(user: User, offerId: number) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
 
-    try {
-      const result = await client.query(
-        `DELETE FROM offre WHERE id_offre = $1 AND id_utilisateur = $2
+        try {
+            const result = await client.query(
+                `DELETE FROM offre WHERE id_offre = $1 AND id_utilisateur = $2
         RETURNING id_offre`,
-        [offerId, user.id]
-      );
+                [offerId, user.id]
+            );
 
-      return result.rowCount! > 0 ? { message: 'Offre supprimée avec succès' } : null;
-    } finally {
-      client.release();
+            return result.rowCount! > 0 ? { message: 'Offre supprimée avec succès' } : null;
+        } finally {
+            client.release();
+        }
     }
-  }
 
-  // Désactiver une offre
-  async disableOffer(user: User, offerId: number) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    // Désactiver une offre
+    async disableOffer(user: User, offerId: number) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
 
-    try {
-      const result = await client.query(
-        `UPDATE offre SET etat_offre = 'desactivee'
+        try {
+            const result = await client.query(
+                `UPDATE offre SET etat_offre = 'desactivee'
         WHERE id_offre = $1 AND id_utilisateur = $2
         RETURNING *`,
-        [offerId, user.id]
-      );
+                [offerId, user.id]
+            );
 
-      return result.rows[0] || null;
-    } finally {
-      client.release();
+            return result.rows[0] || null;
+        } finally {
+            client.release();
+        }
     }
-  }
 
-  // Récupérer les candidatures pour une offre
-  async getOfferCandidatures(user: User, offerId: number) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    // Récupérer les candidatures pour une offre
+    async getOfferCandidatures(user: User, offerId: number) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
 
-    try {
-      const result = await client.query(
-        `SELECT c.*, e.nom, e.prenom 
+        try {
+            const result = await client.query(
+                `SELECT c.*, e.nom, e.prenom 
         FROM candidature c
         JOIN offre o ON c.id_offre = o.id_offre
         JOIN etudiant e ON c.id_utilisateur = e.id_utilisateur
         WHERE o.id_offre = $1 AND o.id_utilisateur = $2
         ORDER BY c.id_candidature DESC`,
-        [offerId, user.id]
-      );
+                [offerId, user.id]
+            );
 
-      return result.rows;
-    } finally {
-      client.release();
+            return result.rows;
+        } finally {
+            client.release();
+        }
     }
-  }
+
+    // Récupérer les offres à valider (pour enseignants)
+    async getOffersToValidate(user: User) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
+
+        try {
+            const result = await client.query(
+                `SELECT 
+          id_offre,
+          intitule_offre,
+          type_contrat,
+          etat_offre,
+          duree_validite,
+          duree_contrat,
+          date_debut_contrat,
+          date_fin_contrat,
+          adresse_offre,
+          remuneration_offre,
+          pays,
+          entreprise_nom
+        FROM vue_offres_deposees`,
+                []
+            );
+
+            return result.rows;
+        } finally {
+            client.release();
+        }
+    }
+
+    // Valider une offre (pour enseignants)
+    async validateOffer(user: User, offerId: number) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
+
+        try {
+            const result = await client.query(
+                `UPDATE offre SET etat_offre = 'validee'
+        WHERE id_offre = $1
+        RETURNING *`,
+                [offerId]
+            );
+
+            return result.rows[0] || null;
+        } finally {
+            client.release();
+        }
+    }
+
+    // Refuser une offre (pour enseignants)
+    async rejectOffer(user: User, offerId: number) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
+
+        try {
+            const result = await client.query(
+                `UPDATE offre SET etat_offre = 'refusee'
+        WHERE id_offre = $1
+        RETURNING *`,
+                [offerId]
+            );
+
+            return result.rows[0] || null;
+        } finally {
+            client.release();
+        }
+    }
 }

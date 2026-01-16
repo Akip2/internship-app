@@ -4,6 +4,7 @@ import AccountManagement from "@/components/homepage/admin/account-management";
 import AttestationManagement from "@/components/homepage/secretaire/attestation-management";
 import StudentManagement from "@/components/homepage/secretaire/student-management";
 import AttestationDeposit from "@/components/homepage/student/attestation-deposit";
+import OffersToValidate from "@/components/homepage/enseignant/offers-to-validate";
 import MyOffers from "@/components/homepage/enterprise/my-offers";
 
 export default function getTabs(role: UserRole): Tab[] {
@@ -13,11 +14,6 @@ export default function getTabs(role: UserRole): Tab[] {
                 {
                     label: "Gestion des comptes",
                     content: <AccountManagement/>
-                },
-
-                {
-                    label: "Archives",
-                    content: null
                 }
             ]
         
@@ -56,6 +52,14 @@ export default function getTabs(role: UserRole): Tab[] {
                 {
                     label: "Consulter les profils étudiants",
                     content: null
+                }
+            ]
+        
+        case UserRole.ENSEIGNANT:
+            return [
+                {
+                    label: "Offres à valider",
+                    content: <OffersToValidate/>
                 }
             ]
         

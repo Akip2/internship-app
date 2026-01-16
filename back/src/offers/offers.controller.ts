@@ -64,4 +64,30 @@ export class OffersController {
   async getOfferCandidatures(@Request() req, @Param('id') id: string) {
     return await this.offersService.getOfferCandidatures(req.user, parseInt(id));
   }
+
+  // Récupérer les offres à valider (pour enseignants)
+  @Get('validation/pending')
+  async getOffersToValidate(@Request() req) {
+    return await this.offersService.getOffersToValidate(req.user);
+  }
+
+  // Valider une offre (pour enseignants)
+  @Put(':id/validate')
+  async validateOffer(@Request() req, @Param('id') id: string) {
+    const offer = await this.offersService.validateOffer(req.user, parseInt(id));
+    if (!offer) {
+      return { message: 'Offre non trouvée' };
+    }
+    return offer;
+  }
+
+  // Refuser une offre (pour enseignants)
+  @Put(':id/reject')
+  async rejectOffer(@Request() req, @Param('id') id: string) {
+    const offer = await this.offersService.rejectOffer(req.user, parseInt(id));
+    if (!offer) {
+      return { message: 'Offre non trouvée' };
+    }
+    return offer;
+  }
 }
