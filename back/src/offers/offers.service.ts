@@ -165,7 +165,7 @@ export class OffersService {
           remuneration_offre = COALESCE($8, remuneration_offre),
           pays = COALESCE($9, pays),
           etat_offre = 'en_modification'
-        WHERE id_offre = $11 AND id_utilisateur = $12
+        WHERE id_offre = $10 AND id_utilisateur = $11
         RETURNING *`,
                 [
                     data.intitule_offre || null,
@@ -177,7 +177,6 @@ export class OffersService {
                     data.adresse_offre || null,
                     data.remuneration_offre || null,
                     data.pays || null,
-                    data.etat_offre || null,
                     offerId,
                     user.id,
                 ]

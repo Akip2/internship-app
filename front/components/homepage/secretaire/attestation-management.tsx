@@ -1,6 +1,6 @@
 "use client";
 
-import { useApi } from "@/lib/fetcher";
+import { getAttestation, useApi } from "@/lib/fetcher";
 import { UserAccount } from "@/lib/types";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
@@ -77,7 +77,7 @@ export default function AttestationManagement(props: { className?: string }) {
                                 <button
                                     className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
                                     onClick={() =>
-                                        openPopup(<img src={`${process.env.NEXT_PUBLIC_API_HOST}:${process.env.NEXT_PUBLIC_API_PORT}/uploads/attestations/${item.attestation_chemin}`} alt="Attestation" width={600} height={800} />)
+                                        openPopup(<img src={`${getAttestation(item.attestation_chemin ?? "")}`} alt="Attestation" width={600} height={800} />)
                                     }
                                 >
                                     Voir

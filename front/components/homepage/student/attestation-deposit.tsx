@@ -1,6 +1,6 @@
 "use client";
 
-import { useApi } from "@/lib/fetcher";
+import { getAttestation, useApi } from "@/lib/fetcher";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 
@@ -98,7 +98,7 @@ export default function AttestationDeposit(props: { className?: string }) {
 
             {attestation.attestation_chemin ? (
                 <img
-                    src={`${API_BASE}/uploads/attestations/${attestation.attestation_chemin}`}
+                    src={`${getAttestation(attestation.attestation_chemin)}`}
                     alt="Attestation"
                     className="w-full rounded shadow mb-2"
                 />

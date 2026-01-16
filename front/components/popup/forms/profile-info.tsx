@@ -38,7 +38,7 @@ export default function ProfileForm() {
 
     const save = async (e: React.FormEvent) => {
         e.preventDefault();
-console.log(profile);
+        console.log(profile);
         const res = await put("accounts/me", profile);
         alert(res.ok ? "Profil mis à jour" : "Erreur lors de la mise à jour");
     };
@@ -85,40 +85,44 @@ console.log(profile);
 
             {role === "entreprise" && (
                 <>
-                    <InputDiv
-                        label="Raison sociale"
-                        name="raison_sociale"
-                        type="text"
-                        value={profile.raison_sociale ?? ""}
-                        onChange={handleChange}
-                        required
-                    />
+                    <div className="div-group">
+                        <InputDiv
+                            label="Raison sociale"
+                            name="raison_sociale"
+                            type="text"
+                            value={profile.raison_sociale ?? ""}
+                            onChange={handleChange}
+                            required
+                        />
 
-                    <InputDiv
-                        label="Domaine d'activité"
-                        name="domaine_entreprise"
-                        type="text"
-                        value={profile.domaine_entreprise ?? ""}
-                        onChange={handleChange}
-                        required
-                    />
+                        <InputDiv
+                            label="Domaine d'activité"
+                            name="domaine_entreprise"
+                            type="text"
+                            value={profile.domaine_entreprise ?? ""}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
 
-                    <InputDiv
-                        label="Adresse"
-                        name="adresse_entreprise"
-                        type="text"
-                        value={profile.adresse_entreprise ?? ""}
-                        onChange={handleChange}
-                        required
-                    />
+                    <div className="div-group">
+                        <InputDiv
+                            label="Adresse"
+                            name="adresse_entreprise"
+                            type="text"
+                            value={profile.adresse_entreprise ?? ""}
+                            onChange={handleChange}
+                            required
+                        />
 
-                    <InputDiv
-                        label="SIRET"
-                        name="siret"
-                        type="text"
-                        value={profile.siret_entreprise ?? ""}
-                        disabled
-                    />
+                        <InputDiv
+                            label="SIRET"
+                            name="siret"
+                            type="text"
+                            value={profile.siret_entreprise ?? ""}
+                            disabled
+                        />
+                    </div>
                 </>
             )}
 

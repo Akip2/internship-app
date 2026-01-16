@@ -42,3 +42,7 @@ export function useApi() {
 
     return { get, post, put };
 }
+
+export function getAttestation(attestationName: string) {
+    return `${host}:${port}/uploads/attestations/${attestationName}`;
+}
