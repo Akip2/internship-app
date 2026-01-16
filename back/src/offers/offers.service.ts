@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
 export type User = { role: string; id: number };
@@ -62,44 +62,55 @@ export class OffersService {
         }
     }
 
-    // Créer une nouvelle offre
     async createOffer(user: User, data: any) {
         const pool = this.db.getPool(user.role);
         const client = await pool.connect();
 
         try {
-            // Validation et valeurs par défaut
-            let duree_validite = data.duree_validite ? parseInt(data.duree_validite) : 12;
+            const duree_validite = data.duree_validite
+                ? parseInt(data.duree_validite)
+                : 12;
 
-            // Validation: duree_validite entre 1 et 12
             if (duree_validite < 1 || duree_validite > 12) {
-                throw new Error('La durée de validité doit être entre 1 et 12 mois');
+                throw new BadRequestException(
+                    'La durée de validité doit être comprise entre 1 et 12 mois'
+                );
             }
 
-            // Calculer duree_contrat à partir des dates
             let duree_contrat = 0;
+
             if (data.date_debut_contrat && data.date_fin_contrat) {
-                const dateDebut = new Date(data.date_debut_contrat);
-                const dateFin = new Date(data.date_fin_contrat);
-                const diffTime = Math.abs(dateFin.getTime() - dateDebut.getTime());
-                duree_contrat = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                duree_contrat = this.calculateDurationInDays(
+                    data.date_debut_contrat,
+                    data.date_fin_contrat
+                );
             }
+
+            this.checkOfferLegality(
+                {
+                    type_contrat: data.type_contrat,
+                    pays: data.pays,
+                    remuneration_offre: data.remuneration_offre,
+                },
+                user,
+                duree_contrat!
+            );
 
             const result = await client.query(
                 `INSERT INTO offre (
-          intitule_offre,
-          duree_validite,
-          type_contrat,
-          duree_contrat,
-          date_debut_contrat,
-          date_fin_contrat,
-          adresse_offre,
-          remuneration_offre,
-          pays,
-          etat_offre,
-          id_utilisateur
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING *`,
+                    intitule_offre,
+                    duree_validite,
+                    type_contrat,
+                    duree_contrat,
+                    date_debut_contrat,
+                    date_fin_contrat,
+                    adresse_offre,
+                    remuneration_offre,
+                    pays,
+                    etat_offre,
+                    id_utilisateur
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+                RETURNING *`,
                 [
                     data.intitule_offre,
                     duree_validite,
@@ -110,7 +121,7 @@ export class OffersService {
                     data.adresse_offre,
                     data.remuneration_offre || null,
                     data.pays,
-                    'deposee', // État initial
+                    'deposee',
                     user.id,
                 ]
             );
@@ -121,86 +132,103 @@ export class OffersService {
         }
     }
 
-    // Mettre à jour une offre
+    /* ============================================================
+       MISE À JOUR D’OFFRE
+       ============================================================ */
     async updateOffer(user: User, offerId: number, data: any) {
         const pool = this.db.getPool(user.role);
         const client = await pool.connect();
 
         try {
-            // Vérifier que l'offre appartient à l'utilisateur
             const check = await client.query(
-                `SELECT id_offre FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
+                `SELECT * FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
                 [offerId, user.id]
             );
 
-            if (check.rows.length === 0) {
-                return null;
+            if (check.rows.length === 0) return null;
+
+            const existing = check.rows[0];
+
+            if (
+                existing.etat_offre === 'validee' ||
+                existing.etat_offre === 'desactivee'
+            ) {
+                throw new BadRequestException(
+                    'Une offre validée ou désactivée ne peut pas être modifiée'
+                );
             }
 
-            // Validation et valeurs par défaut pour duree_validite
-            let duree_validite = data.duree_validite !== undefined ? parseInt(data.duree_validite) : null;
+            const merged = {
+                type_contrat: data.type_contrat ?? existing.type_contrat,
+                pays: data.pays ?? existing.pays,
+                remuneration_offre:
+                    data.remuneration_offre ?? existing.remuneration_offre,
+                date_debut_contrat:
+                    data.date_debut_contrat ?? existing.date_debut_contrat,
+                date_fin_contrat:
+                    data.date_fin_contrat ?? existing.date_fin_contrat,
+            };
 
-            if (duree_validite !== null && (duree_validite < 1 || duree_validite > 12)) {
-                throw new Error('La durée de validité doit être entre 1 et 12 mois');
+            const duree_validite =
+                data.duree_validite !== undefined
+                    ? parseInt(data.duree_validite)
+                    : existing.duree_validite;
+
+            if (duree_validite < 1 || duree_validite > 12) {
+                throw new BadRequestException(
+                    'La durée de validité doit être comprise entre 1 et 12 mois'
+                );
             }
 
-            // Calculer duree_contrat à partir des dates si elles sont fournies
-            let duree_contrat = 0;
-            if (data.date_debut_contrat && data.date_fin_contrat) {
-                const dateDebut = new Date(data.date_debut_contrat);
-                const dateFin = new Date(data.date_fin_contrat);
-                const diffTime = Math.abs(dateFin.getTime() - dateDebut.getTime());
-                duree_contrat = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            let duree_contrat = existing.duree_contrat;
+
+            if (merged.date_debut_contrat && merged.date_fin_contrat) {
+                duree_contrat = this.calculateDurationInDays(
+                    merged.date_debut_contrat,
+                    merged.date_fin_contrat
+                );
             }
+
+            this.checkOfferLegality(
+                {
+                    type_contrat: merged.type_contrat,
+                    pays: merged.pays,
+                    remuneration_offre: merged.remuneration_offre,
+                },
+                user,
+                duree_contrat
+            );
 
             const result = await client.query(
                 `UPDATE offre SET
-          intitule_offre = COALESCE($1, intitule_offre),
-          duree_validite = COALESCE($2, duree_validite),
-          type_contrat = COALESCE($3, type_contrat),
-          duree_contrat = COALESCE($4, duree_contrat),
-          date_debut_contrat = COALESCE($5, date_debut_contrat),
-          date_fin_contrat = COALESCE($6, date_fin_contrat),
-          adresse_offre = COALESCE($7, adresse_offre),
-          remuneration_offre = COALESCE($8, remuneration_offre),
-          pays = COALESCE($9, pays),
-          etat_offre = 'en_modification'
-        WHERE id_offre = $10 AND id_utilisateur = $11
-        RETURNING *`,
+                    intitule_offre = COALESCE($1, intitule_offre),
+                    duree_validite = $2,
+                    type_contrat = $3,
+                    duree_contrat = $4,
+                    date_debut_contrat = $5,
+                    date_fin_contrat = $6,
+                    adresse_offre = COALESCE($7, adresse_offre),
+                    remuneration_offre = $8,
+                    pays = $9,
+                    etat_offre = 'en_modification'
+                WHERE id_offre = $10 AND id_utilisateur = $11
+                RETURNING *`,
                 [
-                    data.intitule_offre || null,
+                    data.intitule_offre ?? null,
                     duree_validite,
-                    data.type_contrat || null,
+                    merged.type_contrat,
                     duree_contrat,
-                    data.date_debut_contrat || null,
-                    data.date_fin_contrat || null,
-                    data.adresse_offre || null,
-                    data.remuneration_offre || null,
-                    data.pays || null,
+                    merged.date_debut_contrat,
+                    merged.date_fin_contrat,
+                    data.adresse_offre ?? null,
+                    merged.remuneration_offre,
+                    merged.pays,
                     offerId,
                     user.id,
                 ]
             );
 
             return result.rows[0];
-        } finally {
-            client.release();
-        }
-    }
-
-    // Supprimer une offre
-    async deleteOffer(user: User, offerId: number) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
-
-        try {
-            const result = await client.query(
-                `DELETE FROM offre WHERE id_offre = $1 AND id_utilisateur = $2
-        RETURNING id_offre`,
-                [offerId, user.id]
-            );
-
-            return result.rowCount! > 0 ? { message: 'Offre supprimée avec succès' } : null;
         } finally {
             client.release();
         }
@@ -222,6 +250,62 @@ export class OffersService {
             return result.rows[0] || null;
         } finally {
             client.release();
+        }
+    }
+
+    checkOfferLegality(data: any, user: User, dureeContratJours: number) {
+        const type = data.type_contrat;
+        const pays = data.pays;
+        const remuneration = data.remuneration_offre;
+
+        const HEURES_MENSUELLES = 151.67;
+        const SMIC_HORAIRE = 1766.92 / HEURES_MENSUELLES;
+        const ALTERNANCE_MIN_HORAIRE = 477.07 / HEURES_MENSUELLES;
+
+        if (type === 'alternance' && pays !== 'France') {
+            throw new BadRequestException("Une alternance doit obligatoirement être située en France.");
+        }
+
+        if (type === 'stage') {
+            if (dureeContratJours > 183) {
+                throw new BadRequestException("La durée d’un stage ne peut pas dépasser 6 mois.");
+            }
+
+            if (dureeContratJours >= 60) {
+                if (!remuneration || remuneration < 4.35) {
+                    throw new BadRequestException(
+                        "Un stage de 2 mois ou plus doit être rémunéré au minimum 4,35 € par heure."
+                    );
+                }
+            }
+        }
+
+        if (type === 'alternance') {
+            if (dureeContratJours < 183 || dureeContratJours > 1095) {
+                throw new BadRequestException(
+                    "La durée d’une alternance doit être comprise entre 6 mois et 3 ans."
+                );
+            }
+
+            if (!remuneration || remuneration < ALTERNANCE_MIN_HORAIRE) {
+                throw new BadRequestException(
+                    "La rémunération horaire de l’alternance est inférieure au minimum légal."
+                );
+            }
+        }
+
+        if (type === 'cdd') {
+            if (dureeContratJours > 548) {
+                throw new BadRequestException(
+                    "La durée d’un CDD ne peut pas dépasser 18 mois (hors exceptions)."
+                );
+            }
+
+            if (!remuneration || remuneration < SMIC_HORAIRE) {
+                throw new BadRequestException(
+                    "La rémunération horaire d’un CDD ne peut pas être inférieure au SMIC."
+                );
+            }
         }
     }
 
@@ -314,4 +398,60 @@ export class OffersService {
             client.release();
         }
     }
+
+    // Réactiver une offre désactivée
+    async reactivateOffer(user: User, offerId: number) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
+
+        try {
+            // Vérifier que l'offre appartient à l'utilisateur et qu'elle est désactivée
+            const check = await client.query(
+                `SELECT id_offre, etat_offre FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
+                [offerId, user.id]
+            );
+
+            if (check.rows.length === 0) {
+                return null;
+            }
+
+            const offer = check.rows[0];
+            if (offer.etat_offre !== 'desactivee') {
+                throw new BadRequestException('Seules les offres désactivées peuvent être réactivées');
+            }
+
+            const result = await client.query(
+                `UPDATE offre SET etat_offre = 'deposee'
+        WHERE id_offre = $1 AND id_utilisateur = $2
+        RETURNING *`,
+                [offerId, user.id]
+            );
+
+            return result.rows[0] || null;
+        } finally {
+            client.release();
+        }
+    }
+
+    private calculateDurationInDays(start: string, end: string): number {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        // Normalisation à minuit (évite les bugs timezone)
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+
+        if (endDate < startDate) {
+            throw new BadRequestException(
+                'La date de fin doit être postérieure ou égale à la date de début'
+            );
+        }
+
+        const diffMs = endDate.getTime() - startDate.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+        // +1 → durée inclusive (du 1 au 1 = 1 jour)
+        return diffDays + 1;
+    }
+
 }

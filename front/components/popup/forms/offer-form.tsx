@@ -121,6 +121,7 @@ export default function OfferForm(props: {
       alert("L'offre a été créée/modifiée avec succès");
       onOfferCreated();
     } else {
+      console.log(resJson)
       setErrorMsg(resJson.message || "Erreur lors de la création/modification");
     }
   };
@@ -209,7 +210,7 @@ export default function OfferForm(props: {
       {/* Rémunération et Durée de validité - Sur une ligne */}
       <div className="grid grid-cols-2 gap-4">
         <InputDiv
-          label="Rémunération (€)"
+          label="Rémunération (€ / h)"
           name="remuneration_offre"
           type="number"
           value={form.remuneration_offre}

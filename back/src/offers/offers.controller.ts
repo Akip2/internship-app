@@ -39,16 +39,6 @@ export class OffersController {
     return offer;
   }
 
-  // Supprimer une offre
-  @Delete(':id')
-  async deleteOffer(@Request() req, @Param('id') id: string) {
-    const result = await this.offersService.deleteOffer(req.user, parseInt(id));
-    if (!result) {
-      return { message: 'Offre non trouvée' };
-    }
-    return result;
-  }
-
   // Désactiver une offre
   @Put(':id/disable')
   async disableOffer(@Request() req, @Param('id') id: string) {
@@ -85,6 +75,16 @@ export class OffersController {
   @Put(':id/reject')
   async rejectOffer(@Request() req, @Param('id') id: string) {
     const offer = await this.offersService.rejectOffer(req.user, parseInt(id));
+    if (!offer) {
+      return { message: 'Offre non trouvée' };
+    }
+    return offer;
+  }
+
+  // Réactiver une offre désactivée
+  @Put(':id/reactivate')
+  async reactivateOffer(@Request() req, @Param('id') id: string) {
+    const offer = await this.offersService.reactivateOffer(req.user, parseInt(id));
     if (!offer) {
       return { message: 'Offre non trouvée' };
     }

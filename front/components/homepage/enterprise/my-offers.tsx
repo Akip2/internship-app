@@ -86,10 +86,6 @@ export default function MyOffers() {
   };
 
   const handleDisableOffer = async (offerId: number) => {
-    if (!confirm("Êtes-vous sûr de vouloir désactiver cette offre?")) {
-      return;
-    }
-
     try {
       const res = await put(`offers/${offerId}/disable`, {});
       const data = await res.json();
@@ -101,6 +97,21 @@ export default function MyOffers() {
       }
     } catch (error) {
       alert("Erreur lors de la désactivation de l'offre");
+    }
+  };
+
+  const handleReactivateOffer = async (offerId: number) => {
+    try {
+      const res = await put(`offers/${offerId}/reactivate`, {});
+      const data = await res.json();
+      if (res.ok) {
+        alert("Offre réactivée avec succès");
+        fetchOffers();
+      } else {
+        alert("Erreur: " + (data.message || "Erreur lors de la réactivation"));
+      }
+    } catch (error) {
+      alert("Erreur lors de la réactivation de l'offre");
     }
   };
 
@@ -174,12 +185,6 @@ export default function MyOffers() {
           <p className="text-gray-500 text-lg">
             Vous n'avez pas encore créé d'offre
           </p>
-          <Button
-            onClick={handleCreateOffer}
-            className="mt-4 bg-blue-600 hover:bg-blue-700"
-          >
-            Créer une première offre
-          </Button>
         </div>
       ) : (
         <div className="overflow-x-auto bg-white rounded-lg shadow">
@@ -260,15 +265,27 @@ export default function MyOffers() {
                           />
                         );
                       }}
+                      disabled={offer.etat_offre === 'validee' || offer.etat_offre === 'desactivee'}
+                      className={offer.etat_offre === 'validee' || offer.etat_offre === 'desactivee' ? 'opacity-50 cursor-not-allowed' : ''}
+                      title={offer.etat_offre === 'validee' ? 'Impossible de modifier une offre validée' : offer.etat_offre === 'desactivee' ? 'Impossible de modifier une offre désactivée' : 'Modifier l\'offre'}
                     >
                       Modifier
                     </Button>
-                    <Button
-                      onClick={() => handleDisableOffer(offer.id_offre)}
-                      variant="destructive"
-                    >
-                      Désactiver
-                    </Button>
+                    {offer.etat_offre === 'desactivee' ? (
+                      <Button
+                        onClick={() => handleReactivateOffer(offer.id_offre)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Réactiver
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => handleDisableOffer(offer.id_offre)}
+                        variant="destructive"
+                      >
+                        Désactiver
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
