@@ -5,8 +5,8 @@ import { Button } from "../ui/button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePopup } from "@/providers/popup-provider";
-import NotificationContainer from "../popup/notification-container";
 import ProfileForm from "../popup/forms/profile-info";
+import NotificationCenter from "../header/notification-center";
 
 export default function Header(props: { className?: string }) {
     const { className } = props;
@@ -25,14 +25,12 @@ export default function Header(props: { className?: string }) {
                     </span>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
                     <Button onClick={() => openPopup(<ProfileForm/>)}>
                         Mon profil
                     </Button>
 
-                    <Button onClick={() => openPopup(<NotificationContainer/>)}>
-                        Notifications
-                    </Button>
+                    <NotificationCenter />
 
                     <Button variant="destructive" onClick={logOut}>
                         Se déconnecter

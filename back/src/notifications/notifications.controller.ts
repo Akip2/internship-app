@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Request, UseGuards, Param } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
@@ -11,6 +11,25 @@ export class NotificationsController {
 
     @Get("")
     async getNotifications(@Request() req) {
-        return await this.service.getNotifications(req.user.role, req.user.id);
+        return await this.service.getNotifications(req.user);
+    }
+
+    @Get("unread/count")
+    async getUnreadCount(@Request() req) {
+        return await this.service.getUnreadCount(req.user);
+    }
+
+    @Put(":id/read")
+    async markAsRead(@Request() req, @Param('id') id: string) {
+        const notification = await this.service.markAsRead(req.user, parseInt(id));
+        if (!notification) {
+            return { message: 'Notification non trouvée' };
+        }
+        return notification;
+    }
+
+    @Put("read-all")
+    async markAllAsRead(@Request() req) {
+        return await this.service.markAllAsRead(req.user);
     }
 }
