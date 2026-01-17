@@ -256,23 +256,26 @@ export class OffersService {
     checkOfferLegality(data: any, user: User, dureeContratJours: number) {
         const type = data.type_contrat;
         const pays = data.pays;
-        const remuneration = data.remuneration_offre;
+        const remunerationMensuelle = data.remuneration_offre;
 
         const HEURES_MENSUELLES = 151.67;
         const SMIC_HORAIRE = 1766.92 / HEURES_MENSUELLES;
         const ALTERNANCE_MIN_HORAIRE = 477.07 / HEURES_MENSUELLES;
+        
+        // Convertir la rémunération mensuelle en horaire
+        const remunerationHoraire = remunerationMensuelle ? remunerationMensuelle / HEURES_MENSUELLES : null;
 
         if (type === 'alternance' && pays !== 'France') {
-            throw new BadRequestException("Une alternance doit obligatoirement être située en France.");
+            throw new BadRequestException("Une alternance doit obligatoirement être situada en France.");
         }
 
         if (type === 'stage') {
             if (dureeContratJours > 183) {
-                throw new BadRequestException("La durée d’un stage ne peut pas dépasser 6 mois.");
+                throw new BadRequestException("La durée d'un stage ne peut pas dépasser 6 mois.");
             }
 
             if (dureeContratJours >= 60) {
-                if (!remuneration || remuneration < 4.35) {
+                if (!remunerationHoraire || remunerationHoraire < 4.35) {
                     throw new BadRequestException(
                         "Un stage de 2 mois ou plus doit être rémunéré au minimum 4,35 € par heure."
                     );
@@ -283,11 +286,11 @@ export class OffersService {
         if (type === 'alternance') {
             if (dureeContratJours < 183 || dureeContratJours > 1095) {
                 throw new BadRequestException(
-                    "La durée d’une alternance doit être comprise entre 6 mois et 3 ans."
+                    "La durée d'une alternance doit être comprise entre 6 mois et 3 ans."
                 );
             }
 
-            if (!remuneration || remuneration < ALTERNANCE_MIN_HORAIRE) {
+            if (!remunerationHoraire || remunerationHoraire < ALTERNANCE_MIN_HORAIRE) {
                 throw new BadRequestException(
                     "La rémunération horaire de l’alternance est inférieure au minimum légal."
                 );
@@ -301,7 +304,7 @@ export class OffersService {
                 );
             }
 
-            if (!remuneration || remuneration < SMIC_HORAIRE) {
+            if (!remunerationHoraire || remunerationHoraire < SMIC_HORAIRE) {
                 throw new BadRequestException(
                     "La rémunération horaire d’un CDD ne peut pas être inférieure au SMIC."
                 );
@@ -491,11 +494,9 @@ export class OffersService {
             const params: any[] = [];
 
             if (typeContrat) {
-                query += ` AND o.type_contrat = $${params.length + 1}`;
+                query += ` WHERE type_contrat = $${params.length + 1}`;
                 params.push(typeContrat);
             }
-
-            query += ` ORDER BY o.id_offre DESC`;
 
             const result = await client.query(query, params);
             return result.rows;

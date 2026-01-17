@@ -210,7 +210,7 @@ export default function OfferForm(props: {
       {/* Rémunération et Durée de validité - Sur une ligne */}
       <div className="grid grid-cols-2 gap-4">
         <InputDiv
-          label="Rémunération (€ / h)"
+          label="Rémunération (€ par mois)"
           name="remuneration_offre"
           type="number"
           value={form.remuneration_offre}
