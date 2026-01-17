@@ -454,4 +454,54 @@ export class OffersService {
         return diffDays + 1;
     }
 
+    // Récupérer les offres disponibles pour les étudiants (validées)
+    async getAvailableOffers(user: User, typeContrat?: string) {
+        const pool = this.db.getPool(user.role);
+        const client = await pool.connect();
+
+        try {
+            // Vérifier que l'étudiant a une attestation validée
+            const attestationCheck = await client.query(
+                `SELECT attestation_rc FROM Etudiant WHERE id_utilisateur = $1`,
+                [user.id]
+            );
+
+            if (attestationCheck.rows.length === 0 || attestationCheck.rows[0].attestation_rc !== 'validee') {
+                throw new BadRequestException('Vous devez avoir une attestation validée pour accéder aux offres');
+            }
+
+            // Récupérer les offres validées
+            let query = `
+                SELECT 
+                    id_offre,
+                    intitule_offre,
+                    type_contrat,
+                    etat_offre,
+                    duree_validite,
+                    duree_contrat,
+                    date_debut_contrat,
+                    date_fin_contrat,
+                    adresse_offre,
+                    remuneration_offre,
+                    pays,
+                    entreprise_nom
+                FROM vue_offres_disponibles
+            `;
+
+            const params: any[] = [];
+
+            if (typeContrat) {
+                query += ` AND o.type_contrat = $${params.length + 1}`;
+                params.push(typeContrat);
+            }
+
+            query += ` ORDER BY o.id_offre DESC`;
+
+            const result = await client.query(query, params);
+            return result.rows;
+        } finally {
+            client.release();
+        }
+    }
+
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Request, UseGuards, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Request, UseGuards, Param, Body, Query } from '@nestjs/common';
 import { OffersService } from './offers.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
@@ -6,6 +6,12 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 export class OffersController {
   constructor(private readonly offersService: OffersService) {}
+
+  // Récupérer les offres disponibles pour les étudiants
+  @Get('available/search')
+  async getAvailableOffers(@Request() req, @Query('type') typeContrat?: string) {
+    return await this.offersService.getAvailableOffers(req.user, typeContrat);
+  }
 
   // Récupérer toutes les offres de l'utilisateur
   @Get()

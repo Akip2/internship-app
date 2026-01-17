@@ -6,6 +6,8 @@ import StudentManagement from "@/components/homepage/secretaire/student-manageme
 import AttestationDeposit from "@/components/homepage/student/attestation-deposit";
 import OffersToValidate from "@/components/homepage/enseignant/offers-to-validate";
 import MyOffers from "@/components/homepage/enterprise/my-offers";
+import { Search } from "lucide-react";
+import SearchOffers from "@/components/homepage/student/search-offers";
 
 export default function getTabs(role: UserRole): Tab[] {
     switch (role) {
@@ -13,10 +15,10 @@ export default function getTabs(role: UserRole): Tab[] {
             return [
                 {
                     label: "Gestion des comptes",
-                    content: <AccountManagement/>
+                    content: <AccountManagement />
                 }
             ]
-        
+
         case UserRole.SECRETAIRE:
             return [
                 {
@@ -26,27 +28,32 @@ export default function getTabs(role: UserRole): Tab[] {
 
                 {
                     label: "Gestion des étudiants",
-                    content: <StudentManagement/>
+                    content: <StudentManagement />
                 }
             ]
         case UserRole.ETUDIANT:
             return [
                 {
-                label: "Mes candidatures",
-                content: null
+                    label: "Recherche d'offres",
+                    content: <SearchOffers />
                 },
-            
+                
+                {
+                    label: "Mes candidatures",
+                    content: null
+                },
+
                 {
                     label: "Mon attestation",
-                    content: <AttestationDeposit/>
+                    content: <AttestationDeposit />
                 }
             ]
-        
+
         case UserRole.ENTREPRISE:
             return [
                 {
                     label: "Mes Offres",
-                    content: <MyOffers/>
+                    content: <MyOffers />
                 },
 
                 {
@@ -54,15 +61,15 @@ export default function getTabs(role: UserRole): Tab[] {
                     content: null
                 }
             ]
-        
+
         case UserRole.ENSEIGNANT:
             return [
                 {
                     label: "Offres à valider",
-                    content: <OffersToValidate/>
+                    content: <OffersToValidate />
                 }
             ]
-        
+
         default:
             return [
                 {
