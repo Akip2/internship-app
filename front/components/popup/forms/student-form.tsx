@@ -6,6 +6,14 @@ import InputDiv from "@/components/shared/input-div";
 import { useApi } from "@/lib/fetcher";
 import { usePopup } from "@/providers/popup-provider";
 import AcademicLevelBox from "@/components/shared/academic-level-box";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 type StudentFormData = {
     firstName: string;
@@ -14,6 +22,7 @@ type StudentFormData = {
     phone: string;
     birthDate: string;
     level: string;
+    visibilite_infos?: boolean;
 };
 
 export default function StudentForm(props: { profile?: StudentFormData, onStudentCreated: () => void }) {
@@ -28,13 +37,18 @@ export default function StudentForm(props: { profile?: StudentFormData, onStuden
         mail: "",
         birthDate: "",
         level: "",
-        phone: ""
+        phone: "",
+        visibilite_infos: false
     });
 
     const handleChange = (field: keyof typeof form) => (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+    const handleSelectChange = (field: string, value: string) => {
+        setForm((prev: any) => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

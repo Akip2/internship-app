@@ -15,4 +15,6 @@ export interface UserAccount {
 export interface StudentAccount extends UserAccount {
     date_naissance_etu: string;
     niveau_etu: string;
+    statut_etu?: string;
+    visibilite_infos?: boolean;
 }

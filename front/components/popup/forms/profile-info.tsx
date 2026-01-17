@@ -8,6 +8,14 @@ import { useSession } from "@/providers/session-provider";
 import { usePopup } from "@/providers/popup-provider";
 import PasswordForm from "./password-form";
 import { toInputDate } from "@/lib/utils";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export default function ProfileForm() {
     const { put, get } = useApi();
@@ -33,6 +41,13 @@ export default function ProfileForm() {
         setProfile((prev: any) => ({
             ...prev,
             [name]: value,
+        }));
+    };
+
+    const handleSelectChange = (field: string, value: string | boolean) => {
+        setProfile((prev: any) => ({
+            ...prev,
+            [field]: value,
         }));
     };
 
@@ -128,23 +143,26 @@ export default function ProfileForm() {
 
             {role !== "admin" && role !== "entreprise" && (
                 <>
-                    <InputDiv
-                        label="Prénom"
-                        name="prenom"
-                        type="text"
-                        value={profile.prenom ?? ""}
-                        onChange={handleChange}
-                        required
-                    />
 
-                    <InputDiv
-                        label="Nom"
-                        name="nom"
-                        type="text"
-                        value={profile.nom ?? ""}
-                        onChange={handleChange}
-                        required
-                    />
+                    <div className="div-group">
+                        <InputDiv
+                            label="Prénom"
+                            name="prenom"
+                            type="text"
+                            value={profile.prenom ?? ""}
+                            onChange={handleChange}
+                            required
+                        />
+
+                        <InputDiv
+                            label="Nom"
+                            name="nom"
+                            type="text"
+                            value={profile.nom ?? ""}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
 
                     {role === "etudiant" && (
                         <>
@@ -165,6 +183,36 @@ export default function ProfileForm() {
                                 value={toInputDate(profile.niveau_etu)}
                                 disabled
                             />
+
+                            <div className="div-group">
+                                <div className="space-y-2">
+                                    <Label htmlFor="statut_etu">Statut *</Label>
+                                    <Select
+                                        value={profile.statut_etu || ""}
+                                        onValueChange={(value) => handleSelectChange("statut_etu", value)}
+                                    >
+                                        <SelectTrigger id="statut_etu">
+                                            <SelectValue placeholder="Sélectionnez votre statut" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="en_recherche">En recherche</SelectItem>
+                                            <SelectItem value="non_en_recherche">Non en recherche</SelectItem>
+                                            <SelectItem value="en_emploi">En emploi</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2 flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        id="visibilite_infos"
+                                        checked={profile.visibilite_infos || false}
+                                        onChange={(e) => handleSelectChange("visibilite_infos", e.target.checked)}
+                                        className="w-4 h-4"
+                                    />
+                                    <Label htmlFor="visibilite_infos" className="mb-0">Rendre mon profil public</Label>
+                                </div>
+                            </div>
                         </>
                     )}
                 </>

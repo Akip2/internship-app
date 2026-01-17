@@ -1,4 +1,4 @@
-import { IsEmail, IsEmpty, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEmpty, IsNotEmpty, IsOptional, IsString, IsBoolean, MinLength } from 'class-validator';
 import { MIN_PASSWORD_LENGTH } from 'src/auth/dto';
 
 export class CreateAccountDto {
@@ -33,4 +33,12 @@ export class CreateStudentDto extends CreateAccountDto {
   @IsString()
   @IsNotEmpty()
   birthDate: string;
+
+  @IsString()
+  @IsOptional()
+  statut_etu?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  visibilite_infos?: boolean;
 }

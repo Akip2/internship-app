@@ -36,7 +36,7 @@ export class AccountsService {
        SET nom = $1,
            prenom = $2,
            date_naissance_etu = $3,
-           niveau_etu = $4,
+           niveau_etu = $4
        WHERE id_utilisateur = $5`,
         [data.lastName, data.firstName, data.birthDate, data.level, data.id_utilisateur]
       );
@@ -59,7 +59,7 @@ export class AccountsService {
         case 'etudiant':
           query = `
             SELECT u.id_utilisateur, u.mail, u.num_tel, e.nom, e.prenom,
-                   e.niveau_etu, e.statut_etu, e.date_naissance_etu::text
+                   e.niveau_etu, e.statut_etu, e.date_naissance_etu::text, e.visibilite_infos
             FROM Utilisateur u
             JOIN Etudiant e ON e.id_utilisateur = u.id_utilisateur
             WHERE u.id_utilisateur = $1
@@ -124,9 +124,9 @@ export class AccountsService {
         case 'etudiant':
           await client.query(
             `UPDATE Etudiant
-             SET nom = $1, prenom = $2, statut_etu = $3, date_naissance_etu = $4
-             WHERE id_utilisateur = $5`,
-            [data.nom, data.prenom, data.statut_etu, data.date_naissance_etu, user.id]
+             SET nom = $1, prenom = $2, statut_etu = $3, date_naissance_etu = $4, visibilite_infos = $5
+             WHERE id_utilisateur = $6`,
+            [data.nom, data.prenom, data.statut_etu, data.date_naissance_etu, data.visibilite_infos, user.id]
           );
           break;
         case 'enseignant':
@@ -220,7 +220,7 @@ export class AccountsService {
     const client = await this.db.getClientWithUserId(user.role, user.id);
     try {
       const res = await client.query(`
-        SELECT e.id_utilisateur, e.nom, e.prenom, e.niveau_etu, e.statut_etu, e.date_naissance_etu::text,
+        SELECT e.id_utilisateur, e.nom, e.prenom, e.niveau_etu, e.statut_etu, e.visibilite_infos, e.date_naissance_etu::text,
                u.mail, u.num_tel, u.login
         FROM Etudiant e
         JOIN Utilisateur u ON e.id_utilisateur = u.id_utilisateur
@@ -343,8 +343,8 @@ export class AccountsService {
       const idUtilisateur = userRes.rows[0].id_utilisateur;
 
       await client.query(
-        'INSERT INTO Etudiant (id_utilisateur, nom, prenom, date_naissance_etu, niveau_etu) VALUES ($1, $2, $3, $4, $5)',
-        [idUtilisateur, dto.lastName, dto.firstName, dto.birthDate, dto.level]
+        'INSERT INTO Etudiant (id_utilisateur, nom, prenom, date_naissance_etu, niveau_etu, statut_etu, visibilite_infos) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [idUtilisateur, dto.lastName, dto.firstName, dto.birthDate, dto.level, 'non_en_recherche', true]
       );
 
       await client.query('COMMIT');
