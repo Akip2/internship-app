@@ -6,6 +6,7 @@ import StudentManagement from "@/components/homepage/secretaire/student-manageme
 import AttestationDeposit from "@/components/homepage/student/attestation-deposit";
 import OffersToValidate from "@/components/homepage/enseignant/offers-to-validate";
 import MyOffers from "@/components/homepage/enterprise/my-offers";
+import PublicStudents from "@/components/homepage/enterprise/public-students";
 import { Search } from "lucide-react";
 import SearchOffers from "@/components/homepage/student/search-offers";
 
@@ -58,7 +59,7 @@ export default function getTabs(role: UserRole): Tab[] {
 
                 {
                     label: "Consulter les profils étudiants",
-                    content: null
+                    content: <PublicStudents />
                 }
             ]
 

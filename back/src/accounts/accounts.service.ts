@@ -363,4 +363,23 @@ export class AccountsService {
       client.release();
     }
   }
+
+  // Récupérer les profils publics des étudiants
+  async getPublicStudentProfiles(user: User) {
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      const result = await client.query(
+        `SELECT
+          id_utilisateur,
+          nom,
+          prenom,
+          niveau_etu
+        FROM vue_etudiants_publics
+        ORDER BY nom, prenom`
+      );
+      return result.rows;
+    } finally {
+      client.release();
+    }
+  }
 }

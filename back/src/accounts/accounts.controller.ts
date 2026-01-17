@@ -59,4 +59,9 @@ export class AccountsController {
     async createEtudiant(@Request() req, @Body() dto: CreateStudentDto) {
         return this.accountsService.createEtudiant(req.user, dto);
     }
+
+    @Get('etudiant/public')
+    async getPublicStudentProfiles(@Request() req) {
+        return this.accountsService.getPublicStudentProfiles(req.user);
+    }
 }
