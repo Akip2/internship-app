@@ -46,3 +46,7 @@ export function useApi() {
 export function getAttestation(attestationName: string) {
     return `${host}:${port}/uploads/attestations/${attestationName}`;
 }
+
+export function getCandidatureDoc(docName: string) {
+    return `${host}:${port}/${docName}`;
+}

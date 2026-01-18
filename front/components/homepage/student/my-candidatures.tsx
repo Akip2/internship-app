@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useApi } from "@/lib/fetcher";
+import { getCandidatureDoc, useApi } from "@/lib/fetcher";
 
 interface Candidature {
   id_candidature: number;
@@ -122,7 +122,7 @@ export default function MyCandidatures() {
                       <div className="flex gap-2 mt-1">
                         {candidature.cv_chemin && (
                           <a
-                            href={candidature.cv_chemin}
+                            href={getCandidatureDoc(candidature.cv_chemin)}
                             download
                             className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
                           >
@@ -131,7 +131,7 @@ export default function MyCandidatures() {
                         )}
                         {candidature.lettre_motivation_chemin && (
                           <a
-                            href={candidature.lettre_motivation_chemin}
+                            href={getCandidatureDoc(candidature.lettre_motivation_chemin)}
                             download
                             className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
                           >
