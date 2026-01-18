@@ -9,6 +9,7 @@ import MyOffers from "@/components/homepage/enterprise/my-offers";
 import PublicStudents from "@/components/homepage/enterprise/public-students";
 import { Search } from "lucide-react";
 import SearchOffers from "@/components/homepage/student/search-offers";
+import MyCandidatures from "@/components/homepage/student/my-candidatures";
 
 export default function getTabs(role: UserRole): Tab[] {
     switch (role) {
@@ -41,7 +42,7 @@ export default function getTabs(role: UserRole): Tab[] {
                 
                 {
                     label: "Mes candidatures",
-                    content: null
+                    content: <MyCandidatures />
                 },
 
                 {

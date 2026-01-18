@@ -73,7 +73,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     }
 
     // Récupère le pool selon le rôle
-    getPool(role: string): Pool {
+    private getPool(role: string): Pool {
         const pool = this.pools.get(role);
         if (!pool) {
             throw new Error(`Pool non trouvé pour le rôle: ${role}`);
@@ -120,6 +120,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
         try {
             await client.query(`SET app.current_user_id = ${Number(userId)}`);
+            //console.log(await client.query(`SELECT current_setting('app.current_user_id')`));
             return client;
         } catch (e) {
             client.release();

@@ -117,12 +117,12 @@ export default function MyOffers() {
 
   const handleViewCandidatures = async (offerId: number, offerTitle: string) => {
     try {
-      const res = await get(`offers/${offerId}/candidatures`);
+      const res = await get(`candidatures/offer/${offerId}`);
       const candidatures = await res.json();
       
       if (res.ok) {
         openPopup(
-          <div className="w-full max-w-2xl bg-white rounded-xl p-6 space-y-4">
+          <div className="w-full max-w-3xl bg-white rounded-xl p-6 space-y-4">
             <h2 className="text-2xl font-bold">
               Candidatures pour "{offerTitle}"
             </h2>
@@ -134,14 +134,49 @@ export default function MyOffers() {
                 {candidatures.map((cand: any) => (
                   <div
                     key={cand.id_candidature}
-                    className="p-4 border rounded-lg bg-gray-50"
+                    className="p-4 border rounded-lg bg-gray-50 space-y-3"
                   >
-                    <p className="font-semibold">
-                      {cand.prenom} {cand.nom}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      État: {cand.etat_candidature}
-                    </p>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-lg">
+                          {cand.prenom} {cand.nom}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Niveau: {cand.niveau_etu}
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        {cand.etat_candidature}
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2 text-xs text-gray-600">
+                      <span>Candidature: {new Date(cand.date_candidature).toLocaleDateString('fr-FR')}</span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {cand.cv_chemin && (
+                        <a
+                          href={cand.cv_chemin}
+                          download
+                          className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                        >
+                          📄 Télécharger CV
+                        </a>
+                      )}
+                      {cand.lettre_motivation_chemin && (
+                        <a
+                          href={cand.lettre_motivation_chemin}
+                          download
+                          className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                        >
+                          📬 Télécharger Lettre
+                        </a>
+                      )}
+                      {!cand.cv_chemin && !cand.lettre_motivation_chemin && (
+                        <p className="text-gray-500 text-sm">Aucun document fourni</p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { usePopup } from "@/providers/popup-provider";
+import CandidatureForm from "@/components/popup/forms/candidature-form";
 
 interface Offer {
     id_offre: number;
@@ -137,8 +138,20 @@ export default function SearchOffers() {
                     </div>
                 </div>
 
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    Postuler
+                <Button 
+                    onClick={() => {
+                        openPopup(
+                            <CandidatureForm
+                                offerId={offer.id_offre}
+                                offerTitle={offer.intitule_offre}
+                                onCandidatureCreated={() => {
+                                }}
+                            />
+                        );
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                    Candidater
                 </Button>
             </div>
         );

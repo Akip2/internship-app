@@ -9,8 +9,7 @@ export class OffersService {
 
     // Récupérer toutes les offres de l'entreprise
     async getMyOffers(user: User) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const result = await client.query(
@@ -43,8 +42,7 @@ export class OffersService {
 
     // Récupérer une offre par ID
     async getOfferById(user: User, offerId: number) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const result = await client.query(
@@ -63,8 +61,7 @@ export class OffersService {
     }
 
     async createOffer(user: User, data: any) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const duree_validite = data.duree_validite
@@ -136,8 +133,7 @@ export class OffersService {
        MISE À JOUR D’OFFRE
        ============================================================ */
     async updateOffer(user: User, offerId: number, data: any) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const check = await client.query(
@@ -236,8 +232,7 @@ export class OffersService {
 
     // Désactiver une offre
     async disableOffer(user: User, offerId: number) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const result = await client.query(
@@ -314,8 +309,7 @@ export class OffersService {
 
     // Récupérer les candidatures pour une offre
     async getOfferCandidatures(user: User, offerId: number) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const result = await client.query(
@@ -336,8 +330,7 @@ export class OffersService {
 
     // Récupérer les offres à valider (pour enseignants)
     async getOffersToValidate(user: User) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const result = await client.query(
@@ -366,8 +359,7 @@ export class OffersService {
 
     // Valider une offre (pour enseignants)
     async validateOffer(user: User, offerId: number) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const result = await client.query(
@@ -385,8 +377,7 @@ export class OffersService {
 
     // Refuser une offre (pour enseignants)
     async rejectOffer(user: User, offerId: number) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             const result = await client.query(
@@ -404,8 +395,7 @@ export class OffersService {
 
     // Réactiver une offre désactivée
     async reactivateOffer(user: User, offerId: number) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             // Vérifier que l'offre appartient à l'utilisateur et qu'elle est désactivée
@@ -459,8 +449,7 @@ export class OffersService {
 
     // Récupérer les offres disponibles pour les étudiants (validées)
     async getAvailableOffers(user: User, typeContrat?: string) {
-        const pool = this.db.getPool(user.role);
-        const client = await pool.connect();
+        const client = await this.db.getClientWithUserId(user.role, user.id);
 
         try {
             // Vérifier que l'étudiant a une attestation validée

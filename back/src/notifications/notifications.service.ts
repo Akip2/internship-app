@@ -10,8 +10,7 @@ export class NotificationsService {
   ) {}
 
   async getNotifications(user: User) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    const client = await this.db.getClientWithUserId(user.role, user.id);
 
     try {
       const result = await client.query(
@@ -28,8 +27,7 @@ export class NotificationsService {
   }
 
   async getUnreadCount(user: User) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    const client = await this.db.getClientWithUserId(user.role, user.id);
 
     try {
       const result = await client.query(
@@ -45,8 +43,7 @@ export class NotificationsService {
   }
 
   async markAsRead(user: User, notificationId: number) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    const client = await this.db.getClientWithUserId(user.role, user.id);
 
     try {
       const result = await client.query(
@@ -63,8 +60,7 @@ export class NotificationsService {
   }
 
   async markAllAsRead(user: User) {
-    const pool = this.db.getPool(user.role);
-    const client = await pool.connect();
+    const client = await this.db.getClientWithUserId(user.role, user.id);
 
     try {
       const result = await client.query(
