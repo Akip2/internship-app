@@ -40,7 +40,14 @@ export function useApi() {
         });
     };
 
-    return { get, post, put };
+    const deleteAPI = (endpoint: string) => {
+        return fetch(`${host}:${port}/${endpoint}`, {
+            method: "DELETE",
+            headers: headers,
+        });
+    };
+
+    return { get, post, put, deleteAPI };
 }
 
 export function getAttestation(attestationName: string) {

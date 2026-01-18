@@ -447,6 +447,33 @@ export class OffersService {
         return diffDays + 1;
     }
 
+    // Supprimer une offre
+    async deleteOffer(user: User, offerId: number) {
+        const client = await this.db.getClientWithUserId(user.role, user.id);
+
+        try {
+            // Vérifier que l'offre appartient à l'utilisateur
+            const check = await client.query(
+                `SELECT id_offre FROM offre WHERE id_offre = $1 AND id_utilisateur = $2`,
+                [offerId, user.id]
+            );
+
+            if (check.rows.length === 0) {
+                return null;
+            }
+
+            // Supprimer l'offre
+            const result = await client.query(
+                `DELETE FROM offre WHERE id_offre = $1 AND id_utilisateur = $2 RETURNING id_offre`,
+                [offerId, user.id]
+            );
+
+            return result.rows[0] || null;
+        } finally {
+            client.release();
+        }
+    }
+
     // Récupérer les offres disponibles pour les étudiants (validées)
     async getAvailableOffers(user: User, typeContrat?: string) {
         const client = await this.db.getClientWithUserId(user.role, user.id);

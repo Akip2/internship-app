@@ -46,7 +46,7 @@ const OFFER_STATUS_COLORS: Record<string, string> = {
 };
 
 export default function MyOffers() {
-  const { get, put } = useApi();
+  const { get, put, deleteAPI } = useApi();
   const { openPopup } = usePopup();
 
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -112,6 +112,26 @@ export default function MyOffers() {
       }
     } catch (error) {
       alert("Erreur lors de la réactivation de l'offre");
+    }
+  };
+
+  const handleDeleteOffer = async (offerId: number) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette offre ? Cette action ne peut pas être annulée.")) {
+      return;
+    }
+
+    try {
+      const res = await deleteAPI(`offers/${offerId}`);
+      
+      const data = await res.json();
+      if (res.ok) {
+        alert("Offre supprimée avec succès");
+        fetchOffers();
+      } else {
+        alert("Erreur: " + (data.message || "Erreur lors de la suppression"));
+      }
+    } catch (error) {
+      alert("Erreur lors de la suppression de l'offre");
     }
   };
 
@@ -321,6 +341,13 @@ export default function MyOffers() {
                         Désactiver
                       </Button>
                     )}
+                    <Button
+                      onClick={() => handleDeleteOffer(offer.id_offre)}
+                      className="bg-red-600 hover:bg-red-700"
+                      title="Supprimer l'offre définitivement"
+                    >
+                      Supprimer
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

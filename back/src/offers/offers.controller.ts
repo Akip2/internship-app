@@ -96,4 +96,14 @@ export class OffersController {
     }
     return offer;
   }
+
+  // Supprimer une offre
+  @Delete(':id')
+  async deleteOffer(@Request() req, @Param('id') id: string) {
+    const offer = await this.offersService.deleteOffer(req.user, parseInt(id));
+    if (!offer) {
+      return { message: 'Offre non trouvée' };
+    }
+    return offer;
+  }
 }

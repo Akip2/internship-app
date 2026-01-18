@@ -20,7 +20,7 @@ export class CandidaturesService {
         try {
             // Vérifier que l'offre existe et est validée
             const offerCheck = await client.query(
-                `SELECT id_offre, etat_offre FROM Offre WHERE id_offre = $1`,
+                `SELECT id_offre, etat_offre FROM vue_offres_disponibles WHERE id_offre = $1`,
                 [offerId]
             );
 
@@ -138,19 +138,16 @@ export class CandidaturesService {
 
             const result = await client.query(
                 `SELECT 
-          c.id_candidature,
-          c.etat_candidature,
-          c.lettre_motivation_chemin,
-          c.date_candidature,
-          c.cv_chemin,
-          e.nom,
-          e.prenom,
-          e.niveau_etu
-        FROM Candidature c
-        JOIN Etudiant e ON c.id_utilisateur = e.id_utilisateur
-        WHERE c.id_offre = $1
-        ORDER BY c.date_candidature DESC`,
-                [offerId]
+          id_candidature,
+          etat_candidature,
+          lettre_motivation_chemin,
+          date_candidature,
+          cv_chemin,
+          nom,
+          prenom,
+          niveau_etu
+        FROM vue_candidatures_entreprise`,
+                []
             );
 
             return result.rows;
