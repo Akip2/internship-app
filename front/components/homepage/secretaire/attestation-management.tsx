@@ -46,6 +46,21 @@ export default function AttestationManagement(props: { className?: string }) {
         }
     }
 
+    async function handleReject(userId: number) {
+        try {
+            const res = await put(`attestations/reject`, { id_utilisateur: userId });
+            if (res.ok) {
+                await fetchAttestations();
+            } else {
+                console.error("Erreur lors du refus");
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     useEffect(() => {
         fetchAttestations();
     }, []);
@@ -90,6 +105,14 @@ export default function AttestationManagement(props: { className?: string }) {
                                 disabled={loading}
                             >
                                 Valider
+                            </button>
+
+                            <button
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                                onClick={() => handleReject(item.id_utilisateur)}
+                                disabled={loading}
+                            >
+                                Refuser
                             </button>
                         </div>
                     </li>

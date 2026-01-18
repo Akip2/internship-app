@@ -23,6 +23,11 @@ export class AttestationsController {
         return await this.service.validateAttestation(req.user, body.id_utilisateur);
     }
 
+    @Put("/reject")
+    async rejectAttestation(@Req() req, @Body() body) {
+        return await this.service.rejectAttestation(req.user, body.id_utilisateur);
+    }
+
     @Post()
     @UseInterceptors(
         FileInterceptor('file', {

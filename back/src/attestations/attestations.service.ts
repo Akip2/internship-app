@@ -53,6 +53,28 @@ export class AttestationsService {
     }
   }
 
+  async rejectAttestation(user: User, etudiantId: number) {
+    console.log('Refus attestation pour étudiant ID:', etudiantId);
+    const client = await this.db.getClientWithUserId(user.role, user.id);
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `UPDATE Etudiant
+         SET attestation_rc = 'non_remontee'
+         WHERE id_utilisateur = $1`,
+        [etudiantId]
+      );
+
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
+
   async getMyAttestation(user: User) {
     const client = await this.db.getClientWithUserId(user.role, user.id);
     try {
