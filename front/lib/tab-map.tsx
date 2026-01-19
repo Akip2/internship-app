@@ -11,6 +11,7 @@ import PublicStudents from "@/components/homepage/enterprise/public-students";
 import { Search } from "lucide-react";
 import SearchOffers from "@/components/homepage/student/search-offers";
 import MyCandidatures from "@/components/homepage/student/my-candidatures";
+import DeclareAbsence from "@/components/homepage/secretaire/declare-absence";
 
 export default function getTabs(role: UserRole): Tab[] {
     switch (role) {
@@ -25,13 +26,18 @@ export default function getTabs(role: UserRole): Tab[] {
         case UserRole.SECRETAIRE:
             return [
                 {
+                    label: "Gestion des étudiants",
+                    content: <StudentManagement />
+                },
+
+                {
                     label: "Attestations",
                     content: <AttestationManagement />
                 },
 
                 {
-                    label: "Gestion des étudiants",
-                    content: <StudentManagement />
+                    label: "Déclaration d'absences",
+                    content: <DeclareAbsence />
                 }
             ]
         case UserRole.ETUDIANT:
@@ -40,7 +46,7 @@ export default function getTabs(role: UserRole): Tab[] {
                     label: "Recherche d'offres",
                     content: <SearchOffers />
                 },
-                
+
                 {
                     label: "Mes candidatures",
                     content: <MyCandidatures />
