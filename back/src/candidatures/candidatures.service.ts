@@ -199,4 +199,73 @@ export class CandidaturesService {
             client.release();
         }
     }
+
+    async getPendingAffectations(user: User) {
+        const client = await this.db.getClientWithUserId(user.role, user.id);
+
+        try {
+            const result = await client.query(
+                `SELECT 
+                    c.id_candidature,
+                    e.nom as nom_etudiant,
+                    e.prenom as prenom_etudiant,
+                    o.intitule_offre,
+                    o.type_contrat,
+                    o.adresse_offre,
+                    o.remuneration_offre,
+                    o.date_debut_contrat,
+                    o.date_fin_contrat,
+                    c.etat_candidature,
+                    c.date_candidature,
+                    e.niveau_etu
+                 FROM Candidature c
+                 JOIN Etudiant e ON c.id_utilisateur = e.id_utilisateur
+                 JOIN Offre o ON c.id_offre = o.id_offre
+                 ORDER BY c.date_candidature DESC`,
+                []
+            );
+
+            return result.rows;
+        } finally {
+            client.release();
+        }
+    }
+
+    async validateAffectationByTeacher(user: User, candidatureId: number) {
+        const client = await this.db.getClientWithUserId(user.role, user.id);
+
+        try {
+            const result = await client.query(
+                `UPDATE Candidature
+                 SET etat_candidature = 'validee_par_enseignant'
+                 WHERE id_candidature = $1
+                 RETURNING *`,
+                [candidatureId]
+            );
+
+            if (result.rows.length === 0) {
+                throw new BadRequestException('Candidature non trouvée');
+            }
+
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
+    }
+
+    async rejectAffectationByTeacher(user: User, candidatureId: number, justification: string) {
+        const client = await this.db.getClientWithUserId(user.role, user.id);
+
+        try {
+            const result = await client.query(
+                `UPDATE Candidature
+                 SET etat_candidature = 'refusee'
+                 WHERE id_candidature = $1`,
+                [candidatureId]
+            );
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
+    }
 }

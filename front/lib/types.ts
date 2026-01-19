@@ -18,3 +18,19 @@ export interface StudentAccount extends UserAccount {
     statut_etu?: string;
     visibilite_infos?: boolean;
 }
+
+export 
+interface Affectation {
+  id_candidature: number;
+  nom_etudiant: string;
+  prenom_etudiant: string;
+  intitule_offre: string;
+  type_contrat: string;
+  adresse_offre: string;
+  remuneration_offre: number | null;
+  date_debut_contrat: string;
+  date_fin_contrat: string;
+  etat_candidature: string;
+  date_candidature: string;
+  niveau_etu: string;
+}

@@ -5,6 +5,7 @@ import AttestationManagement from "@/components/homepage/secretaire/attestation-
 import StudentManagement from "@/components/homepage/secretaire/student-management";
 import AttestationDeposit from "@/components/homepage/student/attestation-deposit";
 import OffersToValidate from "@/components/homepage/enseignant/offers-to-validate";
+import AffectationsToValidate from "@/components/homepage/enseignant/affectations-to-validate";
 import MyOffers from "@/components/homepage/enterprise/my-offers";
 import PublicStudents from "@/components/homepage/enterprise/public-students";
 import { Search } from "lucide-react";
@@ -69,6 +70,10 @@ export default function getTabs(role: UserRole): Tab[] {
                 {
                     label: "Offres à valider",
                     content: <OffersToValidate />
+                },
+                {
+                    label: "Affectations à valider",
+                    content: <AffectationsToValidate />
                 }
             ]
 

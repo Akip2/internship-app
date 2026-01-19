@@ -56,4 +56,26 @@ export class CandidaturesController {
       parseInt(candidatureId)
     );
   }
+
+  @Get('validation/pending')
+  async getPendingAffectations(@Request() req) {
+    return await this.candidaturesService.getPendingAffectations(req.user);
+  }
+
+  @Put(':candidatureId/validate-teacher')
+  async validateAffectationByTeacher(@Request() req, @Param('candidatureId') candidatureId: string) {
+    return await this.candidaturesService.validateAffectationByTeacher(
+      req.user,
+      parseInt(candidatureId)
+    );
+  }
+
+  @Put(':candidatureId/reject-teacher')
+  async rejectAffectationByTeacher(@Request() req, @Param('candidatureId') candidatureId: string, @Body() body: { justification: string }) {
+    return await this.candidaturesService.rejectAffectationByTeacher(
+      req.user,
+      parseInt(candidatureId),
+      body.justification
+    );
+  }
 }
