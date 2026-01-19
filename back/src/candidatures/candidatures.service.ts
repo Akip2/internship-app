@@ -155,4 +155,48 @@ export class CandidaturesService {
             client.release();
         }
     }
+
+    async acceptCandidature(user: User, candidatureId: number) {
+        const client = await this.db.getClientWithUserId(user.role, user.id);
+
+        try {
+            const result = await client.query(
+                `UPDATE Candidature
+                 SET etat_candidature = 'acceptee_par_entreprise'
+                 WHERE id_candidature = $1
+                 RETURNING *`,
+                [candidatureId]
+            );
+
+            if (result.rows.length === 0) {
+                throw new BadRequestException('Candidature non trouvée');
+            }
+
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
+    }
+
+    async rejectCandidature(user: User, candidatureId: number) {
+        const client = await this.db.getClientWithUserId(user.role, user.id);
+
+        try {
+            const result = await client.query(
+                `UPDATE Candidature
+                 SET etat_candidature = 'refusee'
+                 WHERE id_candidature = $1
+                 RETURNING *`,
+                [candidatureId]
+            );
+
+            if (result.rows.length === 0) {
+                throw new BadRequestException('Candidature non trouvée');
+            }
+
+            return result.rows[0];
+        } finally {
+            client.release();
+        }
+    }
 }

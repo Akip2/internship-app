@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Request, UseGuards, Param, Body, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Post, Get, Request, UseGuards, Param, Body, UseInterceptors, UploadedFiles, Put } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CandidaturesService } from './candidatures.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -38,6 +38,22 @@ export class CandidaturesController {
     return await this.candidaturesService.getOfferCandidatures(
       req.user,
       parseInt(offerId)
+    );
+  }
+
+  @Put(':candidatureId/accept')
+  async acceptCandidature(@Request() req, @Param('candidatureId') candidatureId: string) {
+    return await this.candidaturesService.acceptCandidature(
+      req.user,
+      parseInt(candidatureId)
+    );
+  }
+
+  @Put(':candidatureId/reject')
+  async rejectCandidature(@Request() req, @Param('candidatureId') candidatureId: string) {
+    return await this.candidaturesService.rejectCandidature(
+      req.user,
+      parseInt(candidatureId)
     );
   }
 }

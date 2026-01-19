@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/lib/fetcher";
+import { getCandidatureDoc, useApi } from "@/lib/fetcher";
 import { usePopup } from "@/providers/popup-provider";
 import OfferForm from "@/components/popup/forms/offer-form";
 import {
@@ -141,6 +141,42 @@ export default function MyOffers() {
       const candidatures = await res.json();
       
       if (res.ok) {
+        const handleAccept = async (candidatureId: number) => {
+          try {
+            const acceptRes = await put(`candidatures/${candidatureId}/accept`, {});
+            if (acceptRes.ok) {
+              alert("Candidature acceptée avec succès");
+              const updatedRes = await get(`candidatures/offer/${offerId}`);
+              const updatedData = await updatedRes.json();
+              if (updatedRes.ok) {
+                handleViewCandidatures(offerId, offerTitle);
+              }
+            } else {
+              alert("Erreur lors de l'acceptation");
+            }
+          } catch (error) {
+            alert("Erreur lors de l'acceptation");
+          }
+        };
+
+        const handleReject = async (candidatureId: number) => {
+          try {
+            const rejectRes = await put(`candidatures/${candidatureId}/reject`, {});
+            if (rejectRes.ok) {
+              alert("Candidature refusée");
+              const updatedRes = await get(`candidatures/offer/${offerId}`);
+              const updatedData = await updatedRes.json();
+              if (updatedRes.ok) {
+                handleViewCandidatures(offerId, offerTitle);
+              }
+            } else {
+              alert("Erreur lors du refus");
+            }
+          } catch (error) {
+            alert("Erreur lors du refus");
+          }
+        };
+
         openPopup(
           <div className="w-full max-w-3xl bg-white rounded-xl p-6 space-y-4">
             <h2 className="text-2xl font-bold">
@@ -165,38 +201,53 @@ export default function MyOffers() {
                           Niveau: {cand.niveau_etu}
                         </p>
                       </div>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        cand.etat_candidature === 'acceptee_par_entreprise' ? 'bg-green-100 text-green-800' :
+                        cand.etat_candidature === 'refusee' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
                         {cand.etat_candidature}
                       </span>
-                    </div>
-
-                    <div className="flex gap-2 text-xs text-gray-600">
-                      <span>Candidature: {new Date(cand.date_candidature).toLocaleDateString('fr-FR')}</span>
                     </div>
 
                     <div className="flex gap-2">
                       {cand.cv_chemin && (
                         <a
-                          href={cand.cv_chemin}
-                          download
+                          href={getCandidatureDoc(cand.cv_chemin)}
                           className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                         >
-                          📄 Télécharger CV
+                          Voir CV
                         </a>
                       )}
                       {cand.lettre_motivation_chemin && (
                         <a
-                          href={cand.lettre_motivation_chemin}
-                          download
+                          href={getCandidatureDoc(cand.lettre_motivation_chemin)}
                           className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                         >
-                          📬 Télécharger Lettre
+                          Voir Lettre
                         </a>
                       )}
                       {!cand.cv_chemin && !cand.lettre_motivation_chemin && (
                         <p className="text-gray-500 text-sm">Aucun document fourni</p>
                       )}
                     </div>
+
+                    {cand.etat_candidature === 'en_attente' && (
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={() => handleAccept(cand.id_candidature)}
+                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+                        >
+                          Accepter
+                        </button>
+                        <button
+                          onClick={() => handleReject(cand.id_candidature)}
+                          className="flex-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium"
+                        >
+                          Refuser
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
