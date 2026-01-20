@@ -13,7 +13,27 @@ import SearchOffers from "@/components/homepage/student/search-offers";
 import MyCandidatures from "@/components/homepage/student/my-candidatures";
 import DeclareAbsence from "@/components/homepage/secretaire/declare-absence";
 
-export default function getTabs(role: UserRole): Tab[] {
+export default function getTabs(role: UserRole, tempSecretaireMode: boolean = false): Tab[] {
+    // Si l'enseignant est en mode secrétaire temporaire, afficher les onglets secrétaire
+    if (tempSecretaireMode && role === UserRole.ENSEIGNANT) {
+        return [
+            {
+                label: "Gestion des étudiants",
+                content: <StudentManagement />
+            },
+
+            {
+                label: "Attestations",
+                content: <AttestationManagement />
+            },
+
+            {
+                label: "Déclaration d'absences",
+                content: <DeclareAbsence />
+            }
+        ]
+    }
+
     switch (role) {
         case UserRole.ADMIN:
             return [

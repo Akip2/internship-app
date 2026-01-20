@@ -8,7 +8,7 @@ import ContentTabs from "@/components/homepage/content-tabs";
 import getTabs from "@/lib/tab-map";
 
 export default function HomePage() {
-  const { token, role, hydrated } = useSession();
+  const { token, role, hydrated, tempSecretaireMode } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <ContentTabs tabs={getTabs(role)} />
+      <ContentTabs tabs={getTabs(role, tempSecretaireMode)} />
     </div>
   );
 }

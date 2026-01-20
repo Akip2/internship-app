@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/lib/fetcher";
 import { usePopup } from "@/providers/popup-provider";
+import ReplacementModeButton from "./replacement-mode-button";
+import { UserRole } from "@/enums/user-role";
+import { useSession } from "@/providers/session-provider";
 
 interface Offer {
     id_offre: number;
@@ -98,6 +101,8 @@ export default function OffersToValidate() {
 
     return (
         <div className="space-y-4">
+            <ReplacementModeButton />
+
             {errorMsg && (
                 <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
                     {errorMsg}

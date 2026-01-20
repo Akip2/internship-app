@@ -12,8 +12,10 @@ export default function Header(props: { className?: string }) {
     const { className } = props;
     const router = useRouter();
 
-    const { logOut, role, login } = useSession();
+    const { logOut, role, login, tempSecretaireMode } = useSession();
     const { openPopup} = usePopup();
+
+    const displayRole = tempSecretaireMode ? "secrétaire (temporaire)" : role;
 
     return (
         <header className={`bg-white border-b ${className}`}>
@@ -21,7 +23,7 @@ export default function Header(props: { className?: string }) {
                 <div className="flex items-center gap-10">
                     <Image src="/idmc.png" alt="logo" width={200} height={200} />
                     <span className="font-semibold">
-                        {login} <span className="font-normal">({role})</span>
+                        {login} <span className="font-normal">({displayRole})</span>
                     </span>
                 </div>
 

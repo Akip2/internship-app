@@ -20,9 +20,11 @@ interface SessionContextType {
   role: UserRole;
   login: string;
   hydrated: boolean;
+  tempSecretaireMode: boolean;
 
   setSession: (data: { token: string; login: string; role: UserRole }) => void;
   logOut: () => void;
+  setTempSecretaireMode: (enabled: boolean) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -34,6 +36,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const [login, setLogin] = useState("");
   const [role, setRole] = useState<UserRole>(UserRole.INTERNAUTE);
   const [hydrated, setHydrated] = useState(false);
+  const [tempSecretaireMode, setTempSecretaireMode] = useState(false);
 
   useEffect(() => {
     const session = getSessionCookie();
@@ -70,12 +73,13 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     setToken("");
     setLogin("");
     setRole(UserRole.INTERNAUTE);
+    setTempSecretaireMode(false);
     router.push("/login");
   };
 
   return (
     <SessionContext.Provider
-      value={{ token, login, role, hydrated, setSession, logOut }}
+      value={{ token, login, role, hydrated, tempSecretaireMode, setSession, logOut, setTempSecretaireMode }}
     >
       {children}
     </SessionContext.Provider>

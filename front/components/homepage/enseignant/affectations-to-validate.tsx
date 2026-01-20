@@ -6,6 +6,7 @@ import { useApi } from "@/lib/fetcher";
 import { usePopup } from "@/providers/popup-provider";
 import { Affectation } from "@/lib/types";
 import AffectationValidationDetail from "../../popup/forms/affectation-details";
+import ReplacementModeButton from "./replacement-mode-button";
 
 const STATUS_LABELS: Record<string, string> = {
   en_attente: "En attente de validation",
@@ -110,6 +111,7 @@ export default function AffectationsToValidate() {
 
   return (
     <div className="space-y-8">
+      <ReplacementModeButton />
       <div>
         {errorMsg && (
           <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg mb-4">
