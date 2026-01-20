@@ -14,7 +14,6 @@ import MyCandidatures from "@/components/homepage/student/my-candidatures";
 import DeclareAbsence from "@/components/homepage/secretaire/declare-absence";
 
 export default function getTabs(role: UserRole, tempSecretaireMode: boolean = false): Tab[] {
-    // Si l'enseignant est en mode secrétaire temporaire, afficher les onglets secrétaire
     if (tempSecretaireMode && role === UserRole.ENSEIGNANT) {
         return [
             {

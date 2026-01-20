@@ -7,6 +7,7 @@ import { nanoid } from 'nanoid';
 export interface User {
   id: number;
   role: string;
+  tempSecretaireMode?: boolean;
 }
 
 // Constante globale pour le dossier uploads
@@ -17,7 +18,7 @@ export class AttestationsService {
   constructor(private db: DatabaseService) {}
 
   async getAvailableAttestations(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       const res = await client.query(
         `SELECT nom, prenom, attestation_chemin, niveau_etu, id_utilisateur
@@ -33,7 +34,7 @@ export class AttestationsService {
 
   async validateAttestation(user: User, etudiantId: number) {
     console.log('Validation attestation pour étudiant ID:', etudiantId);
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       await client.query('BEGIN');
 
@@ -55,7 +56,7 @@ export class AttestationsService {
 
   async rejectAttestation(user: User, etudiantId: number) {
     console.log('Refus attestation pour étudiant ID:', etudiantId);
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       await client.query('BEGIN');
 
@@ -76,7 +77,7 @@ export class AttestationsService {
   }
 
   async getMyAttestation(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       const res = await client.query(
         `SELECT attestation_chemin, attestation_rc
@@ -97,7 +98,7 @@ export class AttestationsService {
    * @param originalName Nom original côté client
    */
   async createAttestation(user: User, file: Buffer, originalName: string) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
     try {
       await client.query('BEGIN');

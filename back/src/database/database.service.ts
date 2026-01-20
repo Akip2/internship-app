@@ -115,12 +115,17 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         }
     }
 
-    async getClientWithUserId(role: string, userId: number): Promise<PoolClient> {
+    async getClientWithUserId(role: string, userId: number, tempSecretaireMode?: boolean): Promise<PoolClient> {
         const client = await this.getPool(role).connect();
 
         try {
             await client.query(`SET app.current_user_id = ${Number(userId)}`);
-            //console.log(await client.query(`SELECT current_setting('app.current_user_id')`));
+            
+            // Si l'enseignant est en mode secrétaire temporaire, changer le rôle PostgreSQL
+            if (tempSecretaireMode && role === 'enseignant') {
+                await client.query('SET ROLE secretaire_optimatch');
+            }
+            
             return client;
         } catch (e) {
             client.release();

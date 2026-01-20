@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
-export type User = { role: string; id: number };
+export type User = { role: string; id: number; tempSecretaireMode?: boolean };
 
 @Injectable()
 export class RemplacementService {
@@ -17,7 +17,7 @@ export class RemplacementService {
             throw new BadRequestException('Seule une secrétaire peut déclarer une absence');
         }
 
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             // Vérifier que la date de fin est après la date de début
@@ -50,7 +50,7 @@ export class RemplacementService {
     }
 
     async getMyCurrentReplacements(user: User) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -72,7 +72,7 @@ export class RemplacementService {
     }
 
     async getAllEnseignants(user: User) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -97,7 +97,7 @@ export class RemplacementService {
             throw new BadRequestException('Seule une secrétaire peut supprimer un remplacement');
         }
 
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             // Vérifier que le remplacement appartient à la secrétaire

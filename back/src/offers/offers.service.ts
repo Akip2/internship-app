@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
-export type User = { role: string; id: number };
+export type User = { role: string; id: number; tempSecretaireMode?: boolean };
 
 @Injectable()
 export class OffersService {
@@ -9,7 +9,7 @@ export class OffersService {
 
     // Récupérer toutes les offres de l'entreprise
     async getMyOffers(user: User) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -42,7 +42,7 @@ export class OffersService {
 
     // Récupérer une offre par ID
     async getOfferById(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -61,7 +61,7 @@ export class OffersService {
     }
 
     async createOffer(user: User, data: any) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const duree_validite = data.duree_validite
@@ -133,7 +133,7 @@ export class OffersService {
        MISE À JOUR D’OFFRE
        ============================================================ */
     async updateOffer(user: User, offerId: number, data: any) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const check = await client.query(
@@ -232,7 +232,7 @@ export class OffersService {
 
     // Désactiver une offre
     async disableOffer(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -309,7 +309,7 @@ export class OffersService {
 
     // Récupérer les candidatures pour une offre
     async getOfferCandidatures(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -330,7 +330,7 @@ export class OffersService {
 
     // Récupérer les offres à valider (pour enseignants)
     async getOffersToValidate(user: User) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -359,7 +359,7 @@ export class OffersService {
 
     // Valider une offre (pour enseignants)
     async validateOffer(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -377,7 +377,7 @@ export class OffersService {
 
     // Refuser une offre (pour enseignants)
     async rejectOffer(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -395,7 +395,7 @@ export class OffersService {
 
     // Réactiver une offre désactivée
     async reactivateOffer(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             // Vérifier que l'offre appartient à l'utilisateur et qu'elle est désactivée
@@ -449,7 +449,7 @@ export class OffersService {
 
     // Supprimer une offre
     async deleteOffer(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             // Vérifier que l'offre appartient à l'utilisateur
@@ -476,7 +476,7 @@ export class OffersService {
 
     // Récupérer les offres disponibles pour les étudiants (validées)
     async getAvailableOffers(user: User, typeContrat?: string) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             // Vérifier que l'étudiant a une attestation validée

@@ -5,7 +5,7 @@ import { CreateAccountDto, CreateStudentDto, PasswordChangeDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
 
-export type User = { role: string; id: number };
+export type User = { role: string; id: number; tempSecretaireMode?: boolean };
 
 @Injectable()
 export class AccountsService {
@@ -17,7 +17,7 @@ export class AccountsService {
   // --------------------- UTILISATEURS ---------------------
 
   async updateStudentBySecretaire(secretaire: User, data: any) {
-    const client = await this.db.getClientWithUserId(secretaire.role, secretaire.id);
+    const client = await this.db.getClientWithUserId(secretaire.role, secretaire.id, secretaire.tempSecretaireMode);
     try {
       await client.query('BEGIN');
 
@@ -52,7 +52,7 @@ export class AccountsService {
   }
 
   async getMyProfile(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       let query = '';
       switch (user.role) {
@@ -109,7 +109,7 @@ export class AccountsService {
   }
 
   async updateMyProfile(user: User, data: any) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       await client.query('BEGIN');
 
@@ -165,7 +165,7 @@ export class AccountsService {
   }
 
   async changePassword(user: User, newPassword: string) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     try {
@@ -187,7 +187,7 @@ export class AccountsService {
   // --------------------- LISTES ---------------------
 
   async getSecretaires(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       const res = await client.query(`
         SELECT s.id_utilisateur, s.nom, s.prenom, u.mail, u.num_tel, u.login
@@ -202,7 +202,7 @@ export class AccountsService {
   }
 
   async getEnseignants(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       const res = await client.query(`
         SELECT e.id_utilisateur, e.nom, e.prenom, u.mail, u.num_tel, u.login
@@ -217,7 +217,7 @@ export class AccountsService {
   }
 
   async getEtudiants(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       const res = await client.query(`
         SELECT e.id_utilisateur, e.nom, e.prenom, e.niveau_etu, e.statut_etu, e.visibilite_infos, e.date_naissance_etu::text,
@@ -235,7 +235,7 @@ export class AccountsService {
   // --------------------- CREATION ---------------------
 
   async createSecretaire(user: User, dto: CreateAccountDto) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       await client.query('BEGIN');
 
@@ -277,7 +277,7 @@ export class AccountsService {
   }
 
   async createEnseignant(user: User, dto: CreateAccountDto) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       await client.query('BEGIN');
 
@@ -321,7 +321,7 @@ export class AccountsService {
   }
 
   async createEtudiant(user: User, dto: CreateStudentDto) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       await client.query('BEGIN');
 
@@ -366,7 +366,7 @@ export class AccountsService {
 
   // Récupérer les profils publics des étudiants
   async getPublicStudentProfiles(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
     try {
       const result = await client.query(
         `SELECT

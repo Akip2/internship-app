@@ -1,7 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
-export type User = { role: string; id: number };
+export type User = { role: string; id: number; tempSecretaireMode?: boolean };
 
 @Injectable()
 export class NotificationsService {
@@ -10,7 +10,7 @@ export class NotificationsService {
   ) {}
 
   async getNotifications(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
     try {
       const result = await client.query(
@@ -27,7 +27,7 @@ export class NotificationsService {
   }
 
   async getUnreadCount(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
     try {
       const result = await client.query(
@@ -43,7 +43,7 @@ export class NotificationsService {
   }
 
   async markAsRead(user: User, notificationId: number) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
     try {
       const result = await client.query(
@@ -60,7 +60,7 @@ export class NotificationsService {
   }
 
   async markAllAsRead(user: User) {
-    const client = await this.db.getClientWithUserId(user.role, user.id);
+    const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
     try {
       const result = await client.query(

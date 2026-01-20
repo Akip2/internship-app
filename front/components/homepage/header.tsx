@@ -15,7 +15,7 @@ export default function Header(props: { className?: string }) {
     const { logOut, role, login, tempSecretaireMode } = useSession();
     const { openPopup} = usePopup();
 
-    const displayRole = tempSecretaireMode ? "secrétaire (temporaire)" : role;
+    const displayRole = tempSecretaireMode ? "secrétaire" : role;
 
     return (
         <header className={`bg-white border-b ${className}`}>

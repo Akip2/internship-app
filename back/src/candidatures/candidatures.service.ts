@@ -3,7 +3,7 @@ import { DatabaseService } from '../database/database.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
-export type User = { role: string; id: number };
+export type User = { role: string; id: number; tempSecretaireMode?: boolean };
 
 @Injectable()
 export class CandidaturesService {
@@ -15,7 +15,7 @@ export class CandidaturesService {
         cvFile?: Express.Multer.File,
         letterFile?: Express.Multer.File
     ) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             // Vérifier que l'offre existe et est validée
@@ -96,7 +96,7 @@ export class CandidaturesService {
     }
 
     async getStudentCandidatures(user: User) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -121,7 +121,7 @@ export class CandidaturesService {
     }
 
     async getOfferCandidatures(user: User, offerId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             // Vérifier que l'offre appartient à l'utilisateur (pour les entreprises)
@@ -157,7 +157,7 @@ export class CandidaturesService {
     }
 
     async acceptCandidature(user: User, candidatureId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -179,7 +179,7 @@ export class CandidaturesService {
     }
 
     async rejectCandidature(user: User, candidatureId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -201,7 +201,7 @@ export class CandidaturesService {
     }
 
     async getPendingAffectations(user: User) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -232,7 +232,7 @@ export class CandidaturesService {
     }
 
     async validateAffectationByTeacher(user: User, candidatureId: number) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(
@@ -254,7 +254,7 @@ export class CandidaturesService {
     }
 
     async rejectAffectationByTeacher(user: User, candidatureId: number, justification: string) {
-        const client = await this.db.getClientWithUserId(user.role, user.id);
+        const client = await this.db.getClientWithUserId(user.role, user.id, user.tempSecretaireMode);
 
         try {
             const result = await client.query(

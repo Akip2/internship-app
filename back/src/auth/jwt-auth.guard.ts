@@ -25,9 +25,13 @@ export class JwtAuthGuard implements CanActivate {
         secret: this.configService.get('JWT_SECRET'),
       });
       
+      // Vérifier si l'enseignant est en mode secrétaire temporaire
+      const tempSecretaireMode = request.headers['x-temp-secretaire-mode'] === 'true';
+      
       request.user = {
         id: payload.userId,
         role: payload.userRole,
+        tempSecretaireMode: tempSecretaireMode && payload.userRole === 'enseignant',
       };
       
       return true;

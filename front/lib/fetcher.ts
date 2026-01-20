@@ -4,12 +4,17 @@ const host = process.env.NEXT_PUBLIC_API_HOST ?? "http://localhost";
 const port = process.env.NEXT_PUBLIC_API_PORT ?? "4000";
 
 export function useApi() {
-    const { token } = useSession();
+    const { token, tempSecretaireMode } = useSession();
 
     const headers: any = {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
     };
+
+    // Ajouter le header si l'utilisateur est en mode secrétaire temporaire
+    if (tempSecretaireMode) {
+        headers["x-temp-secretaire-mode"] = "true";
+    }
 
     const get = (endpoint: string) => {
         const headerCopy = { ...headers };
